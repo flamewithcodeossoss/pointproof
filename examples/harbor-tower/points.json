@@ -1,0 +1,605 @@
+{
+ "source": "points.csv",
+ "columns": {
+  "id": "#",
+  "system": "System",
+  "equipment": "Equipment",
+  "description": "Point",
+  "name": "DBO Point Name",
+  "rw": "Read/Write",
+  "units": "Units"
+ },
+ "count": 59,
+ "points": [
+  {
+   "id": 1,
+   "system": "BMS",
+   "equipment": "Device",
+   "description": "Online status",
+   "name": "online_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 2,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Run status",
+   "name": "unit_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 3,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Schedule status",
+   "name": "unit_schedule_run_status",
+   "rw": "R/W",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 4,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Supply fan speed",
+   "name": "supply_fan_speed_percentage_sensor",
+   "rw": "R",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 5,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Cooling valve position",
+   "name": "cooling_valve_percentage_command",
+   "rw": "R/W",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 6,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Supply air temperature",
+   "name": "supply_air_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 7,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Supply air temperature setpoint",
+   "name": "supply_air_temperature_setpoint",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 8,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Return air temperature",
+   "name": "return_air_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 9,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Outdoor air damper position",
+   "name": "outdoor_air_damper_percentage_command",
+   "rw": "R/W",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 10,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Return air CO2",
+   "name": "co2_sensor",
+   "rw": "R",
+   "units": "ppm",
+   "asset": ""
+  },
+  {
+   "id": 11,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Filter differential pressure",
+   "name": "filter_differential_pressure_sensor",
+   "rw": "R",
+   "units": "Pa",
+   "asset": ""
+  },
+  {
+   "id": 12,
+   "system": "BMS",
+   "equipment": "Air Handling Unit (AHU)",
+   "description": "Alarms and faults",
+   "name": "fault_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 13,
+   "system": "BMS",
+   "equipment": "Fan Coil Unit (FCU)",
+   "description": "Run status",
+   "name": "fcu_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 14,
+   "system": "BMS",
+   "equipment": "Fan Coil Unit (FCU)",
+   "description": "Zone air temperature",
+   "name": "zone_air_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 15,
+   "system": "BMS",
+   "equipment": "Fan Coil Unit (FCU)",
+   "description": "Zone air temperature setpoint",
+   "name": "zone_air_temperature_setpoint",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 16,
+   "system": "BMS",
+   "equipment": "Fan Coil Unit (FCU)",
+   "description": "Cooling valve position",
+   "name": "fcu_cooling_valve_percentage_command",
+   "rw": "R/W",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 17,
+   "system": "BMS",
+   "equipment": "Fan Coil Unit (FCU)",
+   "description": "Alarms and faults",
+   "name": "fault_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 18,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Chiller run status",
+   "name": "chiller_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 19,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Chiller run hours",
+   "name": "chiller_run_hours",
+   "rw": "R",
+   "units": "h",
+   "asset": ""
+  },
+  {
+   "id": 20,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Chilled water supply temperature",
+   "name": "chilled_water_supply_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 21,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Chilled water return temperature",
+   "name": "chilled_water_return_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 22,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Chilled water supply temperature setpoint",
+   "name": "chilled_water_supply_temperature_setpoint",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 23,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Chiller power",
+   "name": "chiller_power_sensor",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 24,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Outside air temperature",
+   "name": "outside_air_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 25,
+   "system": "BMS",
+   "equipment": "Chiller Plant",
+   "description": "Alarms and faults",
+   "name": "fault_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 26,
+   "system": "BMS",
+   "equipment": "Pumps and VFDs",
+   "description": "Pump run status",
+   "name": "pump_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 27,
+   "system": "BMS",
+   "equipment": "Pumps and VFDs",
+   "description": "Pump speed",
+   "name": "pump_speed_percentage_sensor",
+   "rw": "R",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 28,
+   "system": "BMS",
+   "equipment": "Pumps and VFDs",
+   "description": "Run hours",
+   "name": "equipment_run_time_sensor",
+   "rw": "R",
+   "units": "h",
+   "asset": ""
+  },
+  {
+   "id": 29,
+   "system": "BMS",
+   "equipment": "Pumps and VFDs",
+   "description": "Pump fault",
+   "name": "fault_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 30,
+   "system": "BMS",
+   "equipment": "Zone",
+   "description": "Occupancy status",
+   "name": "zone_occupancy_sensor",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 31,
+   "system": "BMS",
+   "equipment": "Zone",
+   "description": "Zone humidity",
+   "name": "zone_humidity_sensor",
+   "rw": "R",
+   "units": "%RH",
+   "asset": ""
+  },
+  {
+   "id": 32,
+   "system": "Energy",
+   "equipment": "Main Meter",
+   "description": "Active energy import",
+   "name": "active_energy_import_sensor",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 33,
+   "system": "Energy",
+   "equipment": "Main Meter",
+   "description": "Active power demand",
+   "name": "active_power_demand_sensor",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 34,
+   "system": "Energy",
+   "equipment": "Main Meter",
+   "description": "Peak demand",
+   "name": "peak_power_demand_sensor",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 35,
+   "system": "Energy",
+   "equipment": "Main Meter",
+   "description": "Power factor",
+   "name": "power_factor_sensor",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 36,
+   "system": "Energy",
+   "equipment": "Sub-Meter",
+   "description": "Active energy import",
+   "name": "sub_active_energy_import_sensor",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 37,
+   "system": "Energy",
+   "equipment": "Sub-Meter",
+   "description": "Active power demand",
+   "name": "sub_active_power_demand_sensor",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 38,
+   "system": "Energy",
+   "equipment": "Sub-Meter",
+   "description": "Online status",
+   "name": "meter_online_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 39,
+   "system": "Water",
+   "equipment": "Water Meter",
+   "description": "Cumulative volume",
+   "name": "cumulative_water_volume_sensor",
+   "rw": "R",
+   "units": "m3",
+   "asset": ""
+  },
+  {
+   "id": 40,
+   "system": "Water",
+   "equipment": "Water Meter",
+   "description": "High-flow alarm",
+   "name": "high_flow_alarm",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 41,
+   "system": "Lighting",
+   "equipment": "Lighting Zone",
+   "description": "Zone on/off status",
+   "name": "lighting_zone_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 42,
+   "system": "Lighting",
+   "equipment": "Lighting Zone",
+   "description": "Zone energy",
+   "name": "lighting_energy_consumption_sensor",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 43,
+   "system": "Lighting",
+   "equipment": "Lighting Zone",
+   "description": "Active schedule",
+   "name": "lighting_active_schedule_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 44,
+   "system": "Lighting",
+   "equipment": "Occupancy Sensor",
+   "description": "Occupancy status",
+   "name": "occupancy_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 45,
+   "system": "IAQ",
+   "equipment": "IAQ Sensor",
+   "description": "CO2 concentration",
+   "name": "co2_concentration_sensor",
+   "rw": "R",
+   "units": "ppm",
+   "asset": ""
+  },
+  {
+   "id": 46,
+   "system": "IAQ",
+   "equipment": "IAQ Sensor",
+   "description": "PM2.5",
+   "name": "pm25_concentration_sensor",
+   "rw": "R",
+   "units": "µg/m3",
+   "asset": ""
+  },
+  {
+   "id": 47,
+   "system": "IAQ",
+   "equipment": "IAQ Sensor",
+   "description": "Temperature",
+   "name": "air_temperature_sensor",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 48,
+   "system": "IAQ",
+   "equipment": "IAQ Sensor",
+   "description": "Relative humidity",
+   "name": "relative_humidity_sensor",
+   "rw": "R",
+   "units": "%RH",
+   "asset": ""
+  },
+  {
+   "id": 49,
+   "system": "People Counting",
+   "equipment": "People Counter",
+   "description": "Occupancy count",
+   "name": "occupancy_count_sensor",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 50,
+   "system": "People Counting",
+   "equipment": "People Counter",
+   "description": "Entry count",
+   "name": "zone_entry_count_sensor",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 51,
+   "system": "CMMS",
+   "equipment": "Work Orders (read)",
+   "description": "Work order number",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 52,
+   "system": "CMMS",
+   "equipment": "Work Orders (read)",
+   "description": "Work order status",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 53,
+   "system": "CMMS",
+   "equipment": "Work Orders (read)",
+   "description": "Assigned team",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 54,
+   "system": "CMMS",
+   "equipment": "Work Orders (read)",
+   "description": "Completion date / time",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 55,
+   "system": "CMMS",
+   "equipment": "Work Orders (read)",
+   "description": "Labour hours",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 56,
+   "system": "CMMS",
+   "equipment": "Work Orders (SLA)",
+   "description": "SLA status",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 57,
+   "system": "CMMS",
+   "equipment": "Work Orders (SLA)",
+   "description": "Overdue work orders",
+   "name": "",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 58,
+   "system": "CMMS",
+   "equipment": "Work Orders (write)",
+   "description": "Work order description",
+   "name": "",
+   "rw": "W",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 59,
+   "system": "CMMS",
+   "equipment": "Work Orders (write)",
+   "description": "Priority",
+   "name": "",
+   "rw": "W",
+   "units": "",
+   "asset": ""
+  }
+ ]
+}

@@ -1,0 +1,133 @@
+{
+  "project": "Harbor Tower (fictional demo)",
+  "policy": {"max_method": "statistics"},
+  "items": [
+    {
+      "ref": "R1", "title": "Weather-normalised energy baselines", "verdict": "applicable", "usecase": "energy-baseline",
+      "method": ["statistics"],
+      "why": "One regression equation per meter (energy against cooling degree days and occupancy). Standard IPMVP Option C / ASHRAE Guideline 14 method; no ML training.",
+      "points": [
+        {"id": 32, "name": "active_energy_import_sensor"}, {"id": 36, "name": "sub_active_energy_import_sensor"},
+        {"id": 24, "name": "outside_air_temperature_sensor"}, {"id": 49, "name": "occupancy_count_sensor"},
+        {"id": 38, "name": "meter_online_status"}
+      ],
+      "other_inputs": "Weather API (hourly outdoor temperature); building calendar.",
+      "logic": ["Daily total per meter; exclude offline or bad-quality values.", "Cooling degree days from outdoor temperature (base temperature configurable, e.g. 18 °C).", "Fit daily kWh = a + b × CDD + c × occupancy on the last 3–12 months.", "Accept only if CV(RMSE) and NMBE meet ASHRAE Guideline 14.", "Daily: expected vs actual; refit monthly."],
+      "output": "AI tags per meter, daily: expected kWh, deviation kWh and %.",
+      "example": "Main meter, 21 Nov: actual 18,420 kWh; expected 16,950 kWh (CDD 14.2, 1,850 people); +8.7%, flagged above ±5%.",
+      "runs": "Daily; refit monthly", "history": "3 months to start; 12 for all seasons"
+    },
+    {
+      "ref": "R2", "title": "Energy conservation recommendations", "verdict": "applicable", "usecase": "ecm-out-of-hours",
+      "method": ["rules", "genai"],
+      "why": "Fixed rules on live points (running outside schedule, unoccupied zones, excess fresh air); savings from measured kW. The agent writes each recommendation.",
+      "points": [
+        {"id": 2, "name": "unit_run_status"}, {"id": 3, "name": "unit_schedule_run_status"}, {"id": 4, "name": "supply_fan_speed_percentage_sensor"},
+        {"id": 9, "name": "outdoor_air_damper_percentage_command"}, {"id": 10, "name": "co2_sensor"}, {"id": 13, "name": "fcu_run_status"},
+        {"id": 30, "name": "zone_occupancy_sensor"}, {"id": 41, "name": "lighting_zone_run_status"}, {"id": 43, "name": "lighting_active_schedule_status"},
+        {"id": 44, "name": "occupancy_status"}, {"id": 42, "name": "lighting_energy_consumption_sensor"}, {"id": 23, "name": "chiller_power_sensor"}
+      ],
+      "other_inputs": "Operating hours; rated fan kW per AHU/FCU (no fan power point); tariff.",
+      "logic": ["R1 out of hours: unit running while its schedule is off, 30 min or more.", "R2 unoccupied: zone or lighting occupancy false for 60 min while the unit or lights run.", "R3 fresh air: outdoor-air damper above 50% while CO2 is below 600 ppm.", "Saving = hours × kW × tariff; rank by monthly cost. Thresholds are examples."],
+      "output": "Ranked recommendation list with evidence points and estimated monthly saving.",
+      "example": "AHU-03 ran 41 h outside schedule last week (run ON, schedule OFF, fan 85%). Fix the weekend schedule; about 1,150 kWh per month.",
+      "runs": "Daily; ranked weekly", "history": "None",
+      "missing": ["Fan power (kW) per AHU and FCU: not in the list; use rated kW from the asset register"]
+    },
+    {
+      "ref": "R3", "title": "Chilled-water setpoint reset recommendations", "verdict": "applicable", "usecase": "chw-setpoint-reset",
+      "method": ["rules"],
+      "why": "Trim-and-respond rules (ASHRAE Guideline 36 approach) with fixed limits; the operator approves each change. No forecasting.",
+      "points": [
+        {"id": 22, "name": "chilled_water_supply_temperature_setpoint"}, {"id": 20, "name": "chilled_water_supply_temperature_sensor"},
+        {"id": 21, "name": "chilled_water_return_temperature_sensor"}, {"id": 23, "name": "chiller_power_sensor"},
+        {"id": 5, "name": "cooling_valve_percentage_command"}, {"id": 16, "name": "fcu_cooling_valve_percentage_command"},
+        {"id": 14, "name": "zone_air_temperature_sensor"}, {"id": 15, "name": "zone_air_temperature_setpoint"}, {"id": 31, "name": "zone_humidity_sensor"}
+      ],
+      "other_inputs": "Which AHUs and FCUs the plant serves; setpoint limits agreed with the owner and chiller OEM.",
+      "logic": ["Every 15 min: no valve above 90% and zones satisfied for 2 h → recommend +0.5 °C.", "2 or more valves above 95% or a zone warm by 1.5 °C → recommend −0.5 °C.", "Limits 6.0–9.0 °C; max one change per hour; skip if zone humidity would exceed 60%."],
+      "output": "Setpoint recommendation in the operator queue: current, recommended, reason, limits, status.",
+      "example": "CH-01: chilled_water_supply_temperature_setpoint 6.5 → 7.0 °C. Highest valve 62% for 2 h; all zones within ±1 °C. Awaiting approval.",
+      "runs": "Every 15 min", "history": "None"
+    },
+    {
+      "ref": "R4", "title": "Sub-meter balance and drift alerts", "verdict": "applicable", "usecase": "meter-balance-drift",
+      "method": ["statistics"],
+      "why": "Parent minus the sum of sub-meters is arithmetic; drift is a CUSUM of the gap to the baseline.",
+      "points": [{"id": 32, "name": "active_energy_import_sensor"}, {"id": 36, "name": "sub_active_energy_import_sensor"}, {"id": 38, "name": "meter_online_status"}],
+      "other_inputs": "Meter hierarchy; baselines from R1.",
+      "logic": ["Daily unaccounted = main − sum of sub-meters; flag above 5% for 3 days.", "CUSUM of deviation from baseline; flag past 10% of a normal week.", "Skip days with meter offline."],
+      "output": "Meter alerts; AI tags unaccounted % and drift flag.",
+      "example": "Main meter vs 6 sub-meters: 11.8% unaccounted for 5 days; sub-meter SM-4 flat since 16 Nov.",
+      "runs": "Daily", "history": "Balance from day 1; drift after 3 months"
+    },
+    {
+      "ref": "R5", "title": "Energy cost of each fault", "verdict": "applicable", "usecase": "fault-energy-cost",
+      "method": ["rules"],
+      "why": "Extra kWh during the fault × tariff.",
+      "points": [{"id": 12, "name": "fault_status"}, {"id": 25, "name": "fault_status"}, {"id": 29, "name": "fault_status"}, {"id": 23, "name": "chiller_power_sensor"}, {"id": 37, "name": "sub_active_power_demand_sensor"}],
+      "other_inputs": "Fault start and end from the FDD engine; tariff; asset-to-meter mapping.",
+      "logic": ["Extra kWh = (actual kW − expected kW) × duration.", "No power point: rated kW × duration, marked as an estimate.", "Cost = extra kWh × tariff."],
+      "output": "Extra kWh, cost and basis on each fault alert.",
+      "example": "CH-01 low delta-T, 6.5 h: extra 310 kWh (measured).",
+      "runs": "When a fault closes", "history": "None"
+    },
+    {
+      "ref": "R6", "title": "Alarm fatigue reduction", "verdict": "applicable", "usecase": "alarm-kpis",
+      "method": ["statistics", "genai"],
+      "why": "ISA-18.2 and EEMUA 191 alarm statistics (rates, chattering, standing alarms, bad actors) plus co-occurrence; the agent writes shift summaries.",
+      "points": [{"id": 12, "name": "fault_status"}, {"id": 17, "name": "fault_status"}, {"id": 25, "name": "fault_status"}, {"id": 29, "name": "fault_status"}, {"id": 40, "name": "high_flow_alarm"}, {"id": 1, "name": "online_status"}],
+      "other_inputs": "Alarm and event journal from the platform.",
+      "logic": ["Rate per operator per hour; floods; chattering (3+ in 1 min); standing (24 h+).", "Top 10 bad actors; alarms that start together on linked equipment.", "Recommend delay, re-limit or grouping for engineers to apply."],
+      "output": "Weekly alarm KPI report, recommended changes, shift summaries.",
+      "example": "Week 47: 20 alarms per hour (ISA-18.2 guidance about 6). FCU-12 zone deviation chattering 610 times; add a 5-min delay.",
+      "runs": "Per shift; weekly", "history": "30 days"
+    },
+    {
+      "ref": "R7", "title": "Work-order prioritisation by SLA", "verdict": "applicable", "usecase": "work-order-prioritisation",
+      "method": ["rules", "statistics"],
+      "why": "Weighted score plus median resolution times from history.",
+      "points": [{"id": 51, "name": "Work order number"}, {"id": 52, "name": "Work order status"}, {"id": 53, "name": "Assigned team"}, {"id": 54, "name": "Completion date / time"}, {"id": 56, "name": "SLA status"}, {"id": 57, "name": "Overdue work orders"}],
+      "other_inputs": "Asset criticality register; SLA target per priority.",
+      "logic": ["Score = criticality × priority × SLA proximity.", "Typical fix time per work type and team = median of 6 months.", "At risk when time left < typical fix time."],
+      "output": "Ranked queue and daily supervisor summary.",
+      "example": "WO-1042 chiller trip: 3 h to SLA, typical fix 4.5 h, at risk; Team A suggested.",
+      "runs": "Every 15 min", "history": "3–6 months",
+      "missing": ["Asset criticality register (master data, not a point)"]
+    },
+    {
+      "ref": "R8", "title": "Natural-language questions on building data", "verdict": "applicable", "usecase": "copilot-nlq",
+      "method": ["genai"],
+      "why": "The language model reads the question and writes the answer; read-only tools return every number.",
+      "points": [{"id": 32, "name": "active_energy_import_sensor"}, {"id": 45, "name": "co2_concentration_sensor"}, {"id": 49, "name": "occupancy_count_sensor"}, {"id": 9, "name": "outdoor_air_damper_percentage_command"}, {"id": 52, "name": "Work order status"}],
+      "other_inputs": "All points through read-only tools; the list shows typical ones.",
+      "logic": ["Router picks a specialist agent.", "Agent calls parameterised read-only tools.", "Model answers from tool results only, with the data basis."],
+      "output": "Answers with a table or chart and the points used.",
+      "example": "Asked which floors had high CO2 with low occupancy: L8-East 1,240 ppm at 14:00 with 22 people; outdoor-air damper at 10%.",
+      "runs": "On demand", "history": "None"
+    },
+    {
+      "ref": "R9", "title": "Carbon trajectory to 2030", "verdict": "applicable", "usecase": "carbon-trajectory",
+      "method": ["statistics"],
+      "why": "Energy × emission factor, projected with and without planned measures.",
+      "points": [{"id": 32, "name": "active_energy_import_sensor"}],
+      "other_inputs": "2030 target; planned measures; grid emission factor (configured).",
+      "logic": ["Monthly tCO2e = kWh × emission factor.", "Project business as usual and with planned measures to 2030.", "Gap to target per year."],
+      "output": "Trajectory table and chart with summary.",
+      "example": "2026: 4,120 tCO2e; 2030 business as usual 3,980; with measures 3,310; target 3,000.",
+      "runs": "Monthly", "history": "12 months",
+      "missing": ["Carbon intensity factor: not in the list; configure it in the platform"]
+    },
+    {"ref": "R10", "title": "24–72 h energy demand forecasting", "verdict": "out_of_scope"},
+    {"ref": "R11", "title": "Chiller remaining useful life", "verdict": "out_of_scope"},
+    {"ref": "R12", "title": "Drone facade defect detection", "verdict": "out_of_scope"}
+  ],
+  "architecture": [
+    {"layer": "Field systems", "does": "BMS, energy, water, lighting, IAQ, people counting and CMMS, as in the points list.", "data": "All 59 points.", "owner": "Building owner"},
+    {"layer": "Platform", "does": "Historian with quality flags, alarm journal, CMMS integration.", "data": "All points; alarm journal; work-order fields.", "owner": "Platform integrator"},
+    {"layer": "Data access (read only)", "does": "Hourly pull of 15-minute data; quality checks; small analytics store.", "data": "Inputs of R1–R9; online and connectivity points.", "owner": "AI team"},
+    {"layer": "Engines (rules and statistics)", "does": "Baselines (R1, R4, R9), rules and scoring (R2, R3, R5, R7), alarm analytics (R6).", "data": "See section A.", "owner": "AI team"},
+    {"layer": "GenAI agents", "does": "Copilot and explanations (R8, and the text of every recommendation).", "data": "Any point through read-only tools.", "owner": "AI team"},
+    {"layer": "Outputs and approval", "does": "AI tags back to the platform; recommendation queue; operator approves; platform writes R/W points or CMMS work orders.", "data": "R/W points e.g. #22 chilled_water_supply_temperature_setpoint; CMMS write fields #58–#59.", "owner": "AI team prepares; platform executes"}
+  ]
+}

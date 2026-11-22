@@ -1,0 +1,13 @@
+Ref,Requirement,Description
+R1,Weather-normalised energy baselines,Build consumption baselines adjusted for weather and occupancy.
+R2,Energy conservation recommendations,"Recommend schedule, occupancy and fresh-air savings from plant data."
+R3,Chilled-water setpoint reset recommendations,"Recommend setpoint resets that adapt to conditions, for operator review."
+R4,Sub-meter balance and drift alerts,"Find metering faults, unmetered loads and slow drift."
+R5,Energy cost of each fault,Show the energy cost of every detected fault.
+R6,Alarm fatigue reduction,"Find nuisance, chattering and related alarms."
+R7,Work-order prioritisation by SLA,Rank the work-order queue by criticality and SLA risk.
+R8,Natural-language questions on building data,Let operators ask questions in plain language.
+R9,Carbon trajectory to 2030,Project carbon emissions against the 2030 target.
+R10,24–72 h energy demand forecasting,Forecast energy demand to manage peak load.
+R11,Chiller remaining useful life,Predict remaining useful life of chillers.
+R12,Drone facade defect detection,Detect facade defects from drone imagery.
