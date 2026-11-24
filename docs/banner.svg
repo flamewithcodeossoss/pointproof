@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bannerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="60%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <!-- Emerald / Cyan Gradient -->
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="50%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="bannerGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#10B981" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <style>
+    .brand-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 800;
+      font-size: 78px;
+      letter-spacing: -1.5px;
+      fill: #FFFFFF;
+    }
+    .brand-highlight {
+      fill: url(#textGrad);
+    }
+    .brand-subtitle {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 500;
+      font-size: 22px;
+      letter-spacing: 2px;
+      fill: #94A3B8;
+      text-transform: uppercase;
+    }
+    .brand-pill {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 1px;
+      fill: #38BDF8;
+      text-transform: uppercase;
+    }
+  </style>
+
+  <!-- Banner Container -->
+  <rect x="0" y="0" width="1200" height="320" rx="24" fill="url(#bannerBg)" stroke="#334155" stroke-width="2"/>
+
+  <!-- Blueprint Background Grid Accents -->
+  <g opacity="0.15" stroke="#94A3B8" stroke-width="1">
+    <line x1="300" y1="0" x2="300" y2="320" stroke-dasharray="8 8"/>
+    <line x1="600" y1="0" x2="600" y2="320" stroke-dasharray="8 8"/>
+    <line x1="900" y1="0" x2="900" y2="320" stroke-dasharray="8 8"/>
+    <line x1="0" y1="160" x2="1200" y2="160" stroke-dasharray="8 8"/>
+  </g>
+
+  <!-- EMBLEM ICON (Left) -->
+  <g transform="translate(60, 40)">
+    <!-- Squircle Frame -->
+    <rect x="0" y="0" width="240" height="240" rx="54" fill="#0F172A" stroke="#334155" stroke-width="3"/>
+    <circle cx="120" cy="120" r="84" fill="none" stroke="#334155" stroke-dasharray="4 4" stroke-width="1.5" opacity="0.6"/>
+
+    <!-- Constellation Lines -->
+    <g stroke="#38BDF8" stroke-width="2" opacity="0.5">
+      <line x1="120" y1="45" x2="185" y2="82"/>
+      <line x1="185" y1="82" x2="185" y2="158"/>
+      <line x1="185" y1="158" x2="120" y2="195"/>
+      <line x1="120" y1="195" x2="55" y2="158"/>
+      <line x1="55" y1="158" x2="55" y2="82"/>
+      <line x1="55" y1="82" x2="120" y2="45"/>
+      <line x1="55" y1="82" x2="120" y2="120"/>
+      <line x1="185" y1="82" x2="120" y2="120"/>
+      <line x1="120" y1="195" x2="120" y2="120"/>
+    </g>
+
+    <!-- Verified Checkmark -->
+    <path d="M 82 120 L 108 148 L 162 92" 
+          fill="none" 
+          stroke="url(#iconGrad)" 
+          stroke-width="14" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          filter="url(#bannerGlow)"/>
+
+    <!-- Nodes -->
+    <circle cx="120" cy="45" r="7" fill="#0F172A" stroke="#38BDF8" stroke-width="3"/>
+    <circle cx="185" cy="82" r="7" fill="#0F172A" stroke="#10B981" stroke-width="3"/>
+    <circle cx="185" cy="158" r="7" fill="#0F172A" stroke="#38BDF8" stroke-width="3"/>
+    <circle cx="120" cy="195" r="8" fill="#0F172A" stroke="#10B981" stroke-width="3.5"/>
+    <circle cx="55" cy="158" r="7" fill="#0F172A" stroke="#38BDF8" stroke-width="3"/>
+    <circle cx="55" cy="82" r="7" fill="#0F172A" stroke="#10B981" stroke-width="3"/>
+    <circle cx="120" cy="120" r="5" fill="#6EE7B7"/>
+  </g>
+
+  <!-- TYPOGRAPHY (Right) -->
+  <g transform="translate(350, 70)">
+    <!-- Pill Badge -->
+    <rect x="0" y="0" width="270" height="28" rx="14" fill="#0369A1" fill-opacity="0.25" stroke="#0284C7" stroke-width="1"/>
+    <circle cx="16" cy="14" r="4" fill="#38BDF8"/>
+    <text x="30" y="19" class="brand-pill">Telemetry &amp; AI Scoping</text>
+
+    <!-- Main Title -->
+    <text x="0" y="105" class="brand-title">
+      Point<tspan class="brand-highlight">Proof</tspan>
+    </text>
+
+    <!-- Subtitle -->
+    <text x="2" y="150" class="brand-subtitle">
+      Every AI claim, proven point by point.
+    </text>
+
+    <!-- Metadata Tags -->
+    <g transform="translate(0, 172)" opacity="0.75">
+      <text x="0" y="0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" fill="#94A3B8">
+        BMS • SCADA • IoT • Zero Hallucinations • Executable Scopes
+      </text>
+    </g>
+  </g>
+</svg>
