@@ -27,7 +27,7 @@ The agent writes this file; `validate.py` checks it and `build_report.py` turns 
       "history": "3 months",
       "missing": ["Floor area per building (master data)"]
     },
-    {"ref": "R7", "title": "24–72 h demand forecast", "verdict": "out_of_scope"}
+    {"ref": "R7", "title": "24–72 h demand forecast", "verdict": "out_of_scope", "reason": "Needs a trained ML model; policy is statistics."}
   ],
   "architecture": [
     {"layer": "Field systems", "does": "…", "data": "…", "owner": "…"}
@@ -53,6 +53,7 @@ The agent writes this file; `validate.py` checks it and `build_report.py` turns 
 | `example` | applicable | One example with illustrative values |
 | `runs`, `history` | no | Frequency; data needed before it works |
 | `missing` | no | Points or data that are needed but not in the list |
+| `reason` | no | Out-of-scope items: one line on why (method above policy, missing points, third-party platform) |
 | `architecture` | no | Optional layer table for the report |
 
-Out-of-scope items need only `ref`, `title` and `verdict`.
+Out-of-scope items need only `ref`, `title` and `verdict`; `reason` is shown in the report when given.
