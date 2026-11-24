@@ -27,7 +27,8 @@ The most valuable contribution is expanding the standard use-case library in `sk
         label: Plain English Sensor Label
         required: true
         match:
-          name: [regex_pattern_1, regex_pattern_2]
+          name: [regex_pattern_1, '\bshort\b'] # `_` matches any separator; single-quote \b patterns
+          units: ['[km]?w']         # optional: whole units value, e.g. kW
           equipment: [chiller, ahu] # optional equipment filter
           exclude: [bypass]         # optional exclusion filter
       - key: setpoint_control
@@ -44,7 +45,8 @@ The most valuable contribution is expanding the standard use-case library in `sk
 
 ### Guidelines for Use Cases:
 - **Strict Method Ladder**: Always pick the lowest rung that solves the physics (Rules < Statistics < ML).
-- **Vendor-Neutral Patterns**: Use common naming conventions (e.g. DBO, Brick Schema, Project Haystack, standard BACnet object names).
+- **Vendor-Neutral Patterns**: Use common naming conventions (e.g. DBO, Brick Schema, Project Haystack, standard BACnet object names). Names are compared as lower-case words with accents folded, so write `run_status` once rather than every spelling, and wrap short tokens in word boundaries (`'\bkw\b'`) so they do not match inside longer words.
+- **Domain Packs**: Use cases for another domain (water, process, manufacturing, data centres) can live in their own YAML file and be loaded with `match_usecases.py --library pack.yaml --add-builtin`.
 - **Anonymity**: Never include proprietary, sensitive, or client-specific point names or data.
 - **Required vs Optional**: Clearly distinguish mandatory telemetry from nice-to-have inputs.
 

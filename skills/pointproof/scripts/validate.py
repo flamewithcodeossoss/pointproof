@@ -10,10 +10,17 @@ Errors (exit code 1):
   - an applicable item with no points and no `no_points_reason`
   - a verdict other than applicable / out_of_scope, or a duplicate ref
   - a method outside rules/statistics/ml/genai, or above --max-method
+  - a policy max_method other than rules / statistics / ml
 Warnings: applicable items without logic, output or example.
 """
 import argparse, json, sys
 from pathlib import Path
+
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(errors="replace")
+    except Exception:
+        pass
 
 RANK = {"rules": 1, "statistics": 2, "ml": 3}
 METHODS = set(RANK) | {"genai"}
@@ -22,7 +29,9 @@ def validate(assessment, points, max_method="ml"):
     by_id = {str(p["id"]): p for p in points}
     errors, warnings = [], []
     refs = set()
-    limit = RANK.get(max_method, RANK["ml"])
+    if max_method not in RANK:
+        return [f"policy max_method must be one of {', '.join(RANK)} (got {max_method!r})"], []
+    limit = RANK[max_method]
     for it in assessment.get("items", []):
         ref = it.get("ref", "?")
         if ref in refs:
@@ -70,9 +79,9 @@ def main():
     ap.add_argument("points_json")
     ap.add_argument("--max-method", choices=list(RANK), default=None)
     a = ap.parse_args()
-    assessment = json.loads(Path(a.assessment).read_text())
-    points = json.loads(Path(a.points_json).read_text())["points"]
-    max_method = a.max_method or assessment.get("policy", {}).get("max_method", "ml")
+    assessment = json.loads(Path(a.assessment).read_text(encoding="utf-8"))
+    points = json.loads(Path(a.points_json).read_text(encoding="utf-8"))["points"]
+    max_method = a.max_method or (assessment.get("policy") or {}).get("max_method") or "ml"
     errors, warnings = validate(assessment, points, max_method)
     items = assessment.get("items", [])
     app = sum(1 for i in items if i.get("verdict") == "applicable")
