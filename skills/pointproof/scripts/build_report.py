@@ -169,7 +169,9 @@ def build(assessment, points, out):
     ws.sheet_view.zoomScale = 90
     ws.page_setup.orientation = "landscape"; ws.page_setup.paperSize = ws.PAPERSIZE_A3
     ws.page_setup.fitToWidth = 1; ws.page_setup.fitToHeight = 0; ws.sheet_properties.pageSetUpPr.fitToPage = True
-    wb.save(out)
+    out_path = Path(out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    wb.save(out_path)
     return len(app), len(oos)
 
 def main():

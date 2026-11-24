@@ -82,7 +82,11 @@ def main():
     ap.add_argument("--out", default="points.json")
     ap.add_argument("--map", nargs="*", default=[], help="field=Header overrides, e.g. name='DBO Point Name'")
     a = ap.parse_args()
-    overrides = dict(m.split("=", 1) for m in a.map)
+    overrides = {}
+    for m in a.map:
+        if "=" in m:
+            k, v = m.split("=", 1)
+            overrides[k.strip()] = v.strip()
     p = Path(a.points_file)
     ext = p.suffix.lower()
     rows = read_csv(p) if ext in (".csv", ".txt") else read_xlsx(p, a.sheet) if ext in (".xlsx", ".xlsm") else read_pdf(p) if ext == ".pdf" else sys.exit(f"Unsupported file type: {ext}")
@@ -108,7 +112,9 @@ def main():
             "rw": get("rw").upper(), "units": get("units"), "asset": get("asset"),
         })
     out = {"source": str(p.name), "columns": {f: str(header[i]) for f, i in cols.items()}, "count": len(points), "points": points}
-    Path(a.out).write_text(json.dumps(out, ensure_ascii=False, indent=1))
+    out_path = Path(a.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=1))
 
     print(f"Read {len(points)} points from {p.name} -> {a.out}")
     print("Columns:", ", ".join(f"{f}='{h}'" for f, h in out["columns"].items()))

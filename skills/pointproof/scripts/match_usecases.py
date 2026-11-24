@@ -58,7 +58,9 @@ def main():
     points = json.loads(Path(a.points_json).read_text())["points"]
     library = yaml.safe_load(Path(a.library).read_text())
     res = match(points, library)
-    Path(a.out).write_text(json.dumps(res, ensure_ascii=False, indent=1))
+    out_path = Path(a.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(res, ensure_ascii=False, indent=1))
     print(f"{'use case':<30} {'method':<22} {'status':<8} missing")
     for r in res:
         print(f"{r['usecase']:<30} {'+'.join(r['method']):<22} {r['status']:<8} {'; '.join(r['missing_required'])}")

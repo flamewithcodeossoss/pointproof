@@ -94,3 +94,20 @@ def test_report_builds(tmp_path):
     ws = load_workbook(out).active
     refs = [c.value for c in ws["A"] if isinstance(c.value, str) and c.value.startswith("R")]
     assert "R1" in refs and "R12" in refs
+
+
+def test_malformed_point_entry_fails(tmp_path):
+    points = parse(tmp_path)["points"]
+    a = json.loads((EXAMPLE / "assessment.json").read_text())
+    bad = copy.deepcopy(a)
+    bad["items"][0]["points"].append("invalid_format_string")
+    errors, _ = validate(bad, points, "ml")
+    assert any("must be an object" in e for e in errors)
+
+
+def test_nested_output_dir_creation(tmp_path):
+    parse(tmp_path)
+    out = tmp_path / "sub" / "folder" / "nested_report.xlsx"
+    r = run(SCRIPTS / "build_report.py", EXAMPLE / "assessment.json", tmp_path / "points.json", "--out", out)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert out.exists()

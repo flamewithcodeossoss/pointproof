@@ -22,7 +22,7 @@ def validate(assessment, points, max_method="ml"):
     by_id = {str(p["id"]): p for p in points}
     errors, warnings = [], []
     refs = set()
-    limit = RANK[max_method]
+    limit = RANK.get(max_method, RANK["ml"])
     for it in assessment.get("items", []):
         ref = it.get("ref", "?")
         if ref in refs:
@@ -48,6 +48,9 @@ def validate(assessment, points, max_method="ml"):
         if not pts and not it.get("no_points_reason"):
             errors.append(f"{ref}: applicable item has no points and no no_points_reason")
         for pt in pts:
+            if not isinstance(pt, dict):
+                errors.append(f"{ref}: point item must be an object with 'id' and 'name'")
+                continue
             pid = str(pt.get("id"))
             if pid not in by_id:
                 errors.append(f"{ref}: point id {pid} is not in the points list")
