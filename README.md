@@ -344,7 +344,7 @@ An executive-ready, audit-grade proof workbook:
 
 ## Built-in Use-Case Library
 
-PointProof ships with **20 battle-tested building and industrial use cases** in [`references/usecases.yaml`](skills/pointproof/references/usecases.yaml). Each entry defines required and optional telemetry slots, regex patterns for point names, exclude rules, and citations to international engineering standards:
+PointProof ships with **22 building, energy and domain-agnostic use cases** in [`references/usecases.yaml`](skills/pointproof/references/usecases.yaml). Each entry defines required and optional telemetry slots, regex patterns for point names, optional units patterns, exclude rules, and citations to international engineering standards. Matching ignores naming style (`run_status`, `Run Status`, `RunStatus` and `RUN-STATUS` are the same) and folds accents, so the library works on DBO, Brick, Haystack, vendor tags or plain-language descriptions. For other domains, add your own pack with `--library` (see below):
 
 | ID | Title | Method | Standard Reference | Telemetry Slots Required |
 |:---|:---|:---:|:---|:---|
@@ -368,6 +368,8 @@ PointProof ships with **20 battle-tested building and industrial use cases** in 
 | `demand-forecast` | 24–72 h day-ahead peak forecasting | `ml` | Deep learning / XGBoost | Multi-year historical load, weather API |
 | `remaining-useful-life` | Bearing & motor vibration RUL | `ml` | Predictive Maintenance (PdM) | High-frequency vibration, bearing temp |
 | `occupancy-forecast` | Building occupancy forecasting | `ml` | Space planning models | Historical turnstile / camera counts |
+| `sensor-data-quality` | Flatline, range, spike and gap checks (any domain) | `rules` | — | Any analog measurement, comms status |
+| `short-cycling` | Motor, pump, compressor or unit short-cycling (any domain) | `rules` | — | Run status, optional power |
 
 ---
 
@@ -384,11 +386,14 @@ python parse_points.py POINTS_FILE [--sheet NAME] [--out points.json] [--map fie
 ```
 
 - **Arguments**:
-  - `POINTS_FILE`: Path to a `.csv`, `.tsv`, `.xlsx`, `.xlsm`, or `.pdf` file.
-  - `--sheet NAME`: Sheet name for multi-tab Excel workbooks (defaults to first worksheet).
+  - `POINTS_FILE`: Path to a `.csv`, `.tsv`, `.txt`, `.xlsx`, `.xlsm`, or `.pdf` file. CSV delimiter (`,` `;` tab `|`) and encoding (UTF-8 or Windows-1252) are detected.
+  - `--sheet NAME`: Sheet name for multi-tab Excel workbooks (defaults to the sheet with the best header row, so cover and revision sheets are skipped).
   - `--out PATH`: Destination path (defaults to `points.json`). Automatically creates parent folders.
   - `--map field=Header`: Explicit column overrides (e.g. `--map name="BACnet Tag" equipment="Asset Class"`).
 - **Extracted Fields**: `id`, `system`, `equipment`, `description`, `name`, `rw` (Read/Write), `units`, `asset`.
+- **Header detection**: exact synonyms first, then a synonym as whole words inside a longer header (`Tag Name (DBO)`, `Units of Measure`). A single tag or description column is enough.
+- **`rw`** is normalised to `R`, `W`, `R/W` or empty (unknown) from values such as `Read/Write`, `RW`, `Input`/`Output`, or I/O types `AI` `AO` `BI` `BO` `DI` `DO` `AV` `BV`.
+- **Repeated ids** (e.g. numbering that restarts per panel) are kept with ids like `12-2` and a warning; exact duplicate rows are dropped.
 
 ---
 
@@ -397,12 +402,14 @@ python parse_points.py POINTS_FILE [--sheet NAME] [--out points.json] [--map fie
 Screens the site points list against the standard use-case library.
 
 ```bash
-python match_usecases.py points.json [--library usecases.yaml] [--out candidates.json]
+python match_usecases.py points.json [--library pack.yaml ...] [--add-builtin] [--out candidates.json]
 ```
 
 - **Arguments**:
   - `points.json`: Normalized points output from `parse_points.py`.
-  - `--library PATH`: Custom YAML library (defaults to `references/usecases.yaml`).
+  - `--library PATH`: Custom YAML library (defaults to `references/usecases.yaml`). Repeat it to combine packs; a later pack replaces a use case with the same id.
+  - `--add-builtin`: Load the built-in library first, then the `--library` packs.
+- **Writable slots**: when the points list has no read/write data at all, writable slots match on name only and are marked `writable_unverified`.
   - `--out PATH`: Output candidate JSON (defaults to `candidates.json`).
 - **Match Statuses**:
   - `ready`: All mandatory telemetry slots find at least one valid point.
@@ -483,7 +490,8 @@ When an agent or engineer scopes an RFP, they produce `assessment.json`. The sch
     {
       "ref": "R7",
       "title": "24–72 h electrical peak demand forecast",
-      "verdict": "out_of_scope"
+      "verdict": "out_of_scope",
+      "reason": "Needs a trained ML model; team policy is statistics."
     }
   ],
   "architecture": [

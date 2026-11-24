@@ -16,6 +16,12 @@ from openpyxl.utils import get_column_letter
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate import validate  # noqa: E402
 
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(errors="replace")
+    except Exception:
+        pass
+
 FONT = "Arial"
 WIDTH = {"A": 11, "B": 28, "C": 36, "D": 50, "E": 32, "F": 56, "G": 38, "H": 46, "I": 17, "J": 19}
 THIN = Side(style="thin", color="B7BEC6")
@@ -106,11 +112,14 @@ def build(assessment, points, out):
     a_last = r - 1; r += 1
 
     S.section(r, "B. Out of scope"); r += 1
-    S.put(r, 1, "Ref", bold=True, color="FFFFFF", fill=HDR); S.merge(r, 2, 4, "Requirement", bold=True, color="FFFFFF", fill=HDR); r += 1
+    S.put(r, 1, "Ref", bold=True, color="FFFFFF", fill=HDR); S.merge(r, 2, 4, "Requirement", bold=True, color="FFFFFF", fill=HDR)
+    S.merge(r, 5, 10, "Reason", bold=True, color="FFFFFF", fill=HDR); r += 1
     b_first = r
     for k, it in enumerate(oos):
         fill = ZEB if k % 2 else None
-        S.put(r, 1, it.get("ref"), bold=True, fill=fill); S.merge(r, 2, 4, it.get("title"), fill=fill); r += 1
+        S.put(r, 1, it.get("ref"), bold=True, fill=fill); S.merge(r, 2, 4, it.get("title"), fill=fill)
+        S.merge(r, 5, 10, it.get("reason", ""), fill=fill)
+        S.height(r, max(est_lines(it.get("title"), width_of(2, 4)), est_lines(it.get("reason"), width_of(5, 10)))); r += 1
     b_last = r - 1; r += 1
 
     gaps = [(it["ref"], g) for it in app for g in it.get("missing", [])]
@@ -179,10 +188,10 @@ def main():
     ap.add_argument("assessment"); ap.add_argument("points_json")
     ap.add_argument("--out", default="PointProof_report.xlsx")
     a = ap.parse_args()
-    assessment = json.loads(Path(a.assessment).read_text())
-    pdata = json.loads(Path(a.points_json).read_text())
+    assessment = json.loads(Path(a.assessment).read_text(encoding="utf-8"))
+    pdata = json.loads(Path(a.points_json).read_text(encoding="utf-8"))
     assessment.setdefault("points_source", pdata.get("source", "points list"))
-    errors, _ = validate(assessment, pdata["points"], assessment.get("policy", {}).get("max_method", "ml"))
+    errors, _ = validate(assessment, pdata["points"], (assessment.get("policy") or {}).get("max_method") or "ml")
     if errors:
         print("Assessment fails validation; run validate.py and fix:"); [print(" ", e) for e in errors]; sys.exit(1)
     n_app, n_oos = build(assessment, pdata["points"], a.out)
