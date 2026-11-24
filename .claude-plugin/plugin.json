@@ -1,7 +1,0 @@
-{
-  "name": "pointproof",
-  "version": "0.1.0",
-  "description": "Prove which building and industrial AI use cases a site can deliver from its points list: simplest method, exact points, validated Excel report.",
-  "license": "MIT",
-  "keywords": ["bms", "building-automation", "ot", "tender", "points-list", "energy", "agent-skill"]
-}

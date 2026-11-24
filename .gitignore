@@ -4,3 +4,8 @@ __pycache__/
 /points.json
 /candidates.json
 /report.xlsx
+
+# Claude Code & Plugins
+.claude/
+.claude-plugin/
+
