@@ -1,0 +1,14 @@
+Ref,Requirement,Description
+REQ-01,Find plant running when the building is empty,"Flag air handlers, fan coils and chillers that run outside their schedule or with no occupancy."
+REQ-02,Weather-corrected monthly energy performance,Report each month's energy against what the weather and occupancy would predict.
+REQ-03,Sub-meter reconciliation,Check that the sub-meters add up to the main incomer and flag drift.
+REQ-04,Chilled-water temperature reset,Raise the chilled-water supply temperature when cooling demand is low.
+REQ-05,Fresh-air reduction on low CO2,Close the outdoor air damper towards minimum when return CO2 is low.
+REQ-06,Peak demand warnings,Warn before the month's peak demand is exceeded.
+REQ-07,Maintenance scheduling across the technician team,"Plan corrective and planned work over the week by skill, hours and due date."
+REQ-08,Washroom consumables restocking,Tell the cleaning team when to refill soap and towels and how much to order.
+REQ-09,Plain-language questions about the building,Let facility staff ask questions about live and historical data in plain language.
+REQ-10,Open work orders ranked by urgency,Rank the open work order queue by priority and time left to the SLA.
+REQ-11,Chiller failure prediction weeks ahead,Predict chiller failures before they happen.
+REQ-12,Next-day building load forecast,Forecast tomorrow's hourly electricity demand.
+REQ-13,Footfall counting from CCTV video,Count visitors from the existing CCTV cameras.

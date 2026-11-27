@@ -5,7 +5,5 @@ __pycache__/
 /candidates.json
 /report.xlsx
 
-# Claude Code & Plugins
+# Claude Code local settings
 .claude/
-.claude-plugin/
-

@@ -2,15 +2,15 @@
 """Validate an assessment against the points list. No invented points get through.
 
 Usage:
-    python validate.py assessment.json points.json [--max-method rules|statistics|ml]
+    python validate.py assessment.json points.json [--max-method rules|statistics|optimisation|ml]
 
 Errors (exit code 1):
   - a point id that is not in points.json
   - a point name that does not match the name in points.json for that id
   - an applicable item with no points and no `no_points_reason`
   - a verdict other than applicable / out_of_scope, or a duplicate ref
-  - a method outside rules/statistics/ml/genai, or above --max-method
-  - a policy max_method other than rules / statistics / ml
+  - a method outside rules/statistics/optimisation/ml/genai, or above --max-method
+  - a policy max_method other than rules / statistics / optimisation / ml
 Warnings: applicable items without logic, output or example.
 """
 import argparse, json, sys
@@ -22,7 +22,7 @@ for _s in (sys.stdout, sys.stderr):
     except Exception:
         pass
 
-RANK = {"rules": 1, "statistics": 2, "ml": 3}
+RANK = {"rules": 1, "statistics": 2, "optimisation": 3, "ml": 4}
 METHODS = set(RANK) | {"genai"}
 
 def validate(assessment, points, max_method="ml"):

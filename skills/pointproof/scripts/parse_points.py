@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
-"""Normalise a points list (CSV, TSV, XLSX or PDF table) into points.json.
+"""Normalise any points source into points.json.
 
 Usage:
-    python parse_points.py POINTS_FILE [--sheet NAME] [--out points.json] [--map field=Header ...]
+    python parse_points.py SOURCE [--format auto|table|brick|haystack|ede|opcua] [--sheet NAME]
+                           [--out points.json] [--map field=Header ...]
 
+Sources (detected from the file unless --format is given):
+  table     CSV, TSV, XLSX or a PDF table: points schedules, I/O lists, historian / PI tag exports
+  brick     Brick model (TTL / RDF; needs rdflib)
+  haystack  Project Haystack JSON (v3 grid or Hayson)
+  ede       BACnet EDE export (semicolon CSV)
+  opcua     OPC UA NodeSet2 XML
 Every point gets: id, system, equipment, description, name, rw, units, asset.
-`id` is taken from a '#'/'No'/'ID' column when present, otherwise the row number.
+For tables, `id` is taken from a '#'/'No'/'ID' column when present, otherwise the row number;
+`system` is inferred from the equipment and tag when the list has no system column.
 `rw` is normalised to R, W, R/W or "" (unknown) from values such as Read/Write, RW,
 Input/Output or BACnet/IO types (AI, AO, BI, BO, DI, DO, AV, BV, MV).
 CSV files may be comma, semicolon, tab or pipe separated, in UTF-8 or Windows-1252.
@@ -14,6 +22,9 @@ Without --sheet, the workbook sheet with the best header row is used.
 import argparse, csv, io, json, re, sys
 from collections import Counter
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from adapters import READERS, detect, system_of  # noqa: E402
 
 for _s in (sys.stdout, sys.stderr):
     try:
@@ -27,13 +38,13 @@ FIELDS = {
     "equipment": ["equipment", "equipment type", "asset type", "device type", "equipment class", "class", "object type",
                   "equipment category"],
     "description": ["point", "description", "point description", "point name", "signal", "signal description",
-                    "parameter", "point label", "label", "io description", "i/o description"],
+                    "parameter", "point label", "label", "io description", "i/o description", "descriptor"],
     "name": ["dbo point name", "dbo name", "dbo", "brick", "brick class", "haystack", "tag", "tag name", "tagname",
              "object name", "standard name", "bacnet name", "point tag", "name", "tag id", "signal name", "variable",
-             "variable name", "address", "point address"],
+             "variable name", "address", "point address", "tag_name", "pi point"],
     "rw": ["read/write", "r/w", "rw", "access", "read write", "direction", "io type", "i/o type", "io", "i/o",
            "signal type", "point type"],
-    "units": ["units", "unit", "eng units", "engineering units", "uom", "unit of measure", "units of measure"],
+    "units": ["units", "unit", "eng units", "engunits", "engineering units", "uom", "unit of measure", "units of measure"],
     "asset": ["asset", "equipment id", "equipment name", "device", "device name", "instance", "location", "panel",
               "controller"],
 }
@@ -169,6 +180,7 @@ def parse_id(raw):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("points_file")
+    ap.add_argument("--format", default="auto", choices=["auto", "table", "brick", "haystack", "ede", "opcua"])
     ap.add_argument("--sheet")
     ap.add_argument("--out", default="points.json")
     ap.add_argument("--map", nargs="*", default=[], help="field=Header overrides, e.g. name='DBO Point Name'")
@@ -182,6 +194,15 @@ def main():
             sys.exit(f"--map: unknown field {k!r}; use one of {', '.join(FIELDS)}")
         overrides[k] = v
     p = Path(a.points_file)
+    fmt = detect(p) if a.format == "auto" else a.format
+    if fmt == "pointproof":
+        sys.exit(f"{p.name} is already a PointProof points.json.")
+    if fmt in READERS:
+        points = [{"id": i, **pt} for i, pt in enumerate(READERS[fmt](p), 1)]
+        write(p, a.out, fmt, {}, points)
+        return
+    if fmt == "unknown" and p.suffix.lower() not in (".csv", ".txt", ".tsv", ".xlsx", ".xlsm", ".pdf"):
+        sys.exit(f"Unrecognised source: {p.name}. Use --format, or export the points as CSV/XLSX.")
     ext = p.suffix.lower()
     if ext in (".csv", ".txt", ".tsv"):
         rows = read_csv(p)
@@ -213,9 +234,12 @@ def main():
             continue
         raw_id = get("id")
         pid = parse_id(raw_id) if raw_id else n
+        # Tag exports (AHU01.SAT) carry the asset in the tag prefix.
+        asset = get("asset") or (name.split(".", 1)[0] if "." in name and not get("equipment") else "")
         point = {
-            "id": pid, "system": get("system"), "equipment": get("equipment"), "description": desc, "name": name,
-            "rw": norm_rw(get("rw")), "units": get("units"), "asset": get("asset"),
+            "id": pid, "system": get("system") or system_of(f"{get('equipment')} {asset}", f"{name} {desc}"),
+            "equipment": get("equipment"), "description": desc, "name": name,
+            "rw": norm_rw(get("rw")), "units": get("units"), "asset": asset,
         }
         key = str(pid)
         same_id = by_raw_id.setdefault(key, [])
@@ -230,25 +254,33 @@ def main():
             renamed += 1
         seen.add(key)
         points.append(point)
-    out = {"source": str(p.name), "columns": {f: str(header[i]) for f, i in cols.items()}, "count": len(points), "points": points}
-    out_path = Path(a.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
-
-    print(f"Read {len(points)} points from {p.name} -> {a.out}")
-    print("Columns:", ", ".join(f"{f}='{h}'" for f, h in out["columns"].items()))
+    columns = {f: str(header[i]) for f, i in cols.items()}
+    write(p, a.out, "table", columns, points)
     if renamed:
         print(f"WARN {renamed} point(s) repeat an id from column '{header[cols['id']]}'; they were given ids like "
               f"'<id>-2'. If ids restart per panel or sheet, rerun with --map id=<a unique column>.")
-    by_sys = Counter(pt["system"] or "(no system)" for pt in points)
-    for s, c in by_sys.most_common():
-        print(f"  {s:<30} {c:>5}")
     if "rw" in cols:
         writable = sum(1 for pt in points if "W" in pt["rw"])
         unknown = sum(1 for pt in points if not pt["rw"])
         print(f"Writable points: {writable}" + (f" ({unknown} with an unrecognised read/write value)" if unknown else ""))
     else:
         print("No read/write column found: writable points cannot be confirmed (use --map rw=<Header> if there is one).")
+
+
+
+def write(p, out_path, fmt, columns, points):
+    out = {"source": str(p.name), "format": fmt, "columns": columns, "count": len(points), "points": points}
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"Read {len(points)} points from {p.name} ({fmt}) -> {out_path}")
+    if columns:
+        print("Columns:", ", ".join(f"{f}='{h}'" for f, h in columns.items()))
+    by_sys = Counter(pt["system"] or "(no system)" for pt in points)
+    for s, c in by_sys.most_common():
+        print(f"  {s:<30} {c:>5}")
+    if fmt != "table":
+        print(f"Writable (R/W) points: {sum(1 for pt in points if 'W' in pt['rw'])}")
 
 
 if __name__ == "__main__":

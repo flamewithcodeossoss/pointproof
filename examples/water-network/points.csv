@@ -1,0 +1,27 @@
+#,System,Equipment,Point,Read/Write,Tag,Units
+1,SCADA,DMA-01 Inlet,Inlet flow rate,R,dma01_inlet_flow_rate,m3/h
+2,SCADA,DMA-01 Inlet,Inlet cumulative volume,R,dma01_inlet_cumulative_volume,m3
+3,SCADA,DMA-01 Inlet,Inlet pressure,R,dma01_inlet_pressure,bar
+4,SCADA,DMA-01 PRV,PRV outlet pressure,R,dma01_prv_outlet_pressure,bar
+5,SCADA,DMA-01 PRV,PRV outlet pressure setpoint,R/W,dma01_prv_pressure_setpoint,bar
+6,SCADA,DMA-01 Critical point,Critical point pressure,R,dma01_cp_pressure,bar
+7,SCADA,DMA-02 Inlet,Inlet flow rate,R,dma02_inlet_flow_rate,m3/h
+8,SCADA,DMA-02 Inlet,Inlet cumulative volume,R,dma02_inlet_cumulative_volume,m3
+9,SCADA,DMA-02 Inlet,Inlet pressure,R,dma02_inlet_pressure,bar
+10,SCADA,DMA-02 Inlet,High-flow alarm,R,dma02_high_flow_alarm,
+11,SCADA,Reservoir R1,Tank level,R,r1_tank_level,%
+12,SCADA,Reservoir R1,Inlet flow,R,r1_inlet_flow_rate,m3/h
+13,SCADA,Reservoir R1,Outlet flow,R,r1_outlet_flow_rate,m3/h
+14,SCADA,Reservoir R1,High level alarm,R,r1_high_level_alarm,
+15,SCADA,Reservoir R1,Low level alarm,R,r1_low_level_alarm,
+16,SCADA,Pump Station PS1,Pump 1 run status,R,ps1_pump1_run_status,
+17,SCADA,Pump Station PS1,Pump 1 run command,R/W,ps1_pump1_run_command,
+18,SCADA,Pump Station PS1,Pump 2 run status,R,ps1_pump2_run_status,
+19,SCADA,Pump Station PS1,Pump 2 run command,R/W,ps1_pump2_run_command,
+20,SCADA,Pump Station PS1,Station power,R,ps1_power,kW
+21,SCADA,Pump Station PS1,Station energy,R,ps1_energy,kWh
+22,SCADA,Pump Station PS1,Discharge pressure,R,ps1_discharge_pressure,bar
+23,SCADA,Pump Station PS1,Pump 1 fault,R,ps1_pump1_fault_status,
+24,SCADA,Pump Station PS1,Pump 2 fault,R,ps1_pump2_fault_status,
+25,AMR,Customer meters DMA-01,Billed consumption (daily),R,dma01_customer_cumulative_water_volume,m3
+26,AMR,Customer meters DMA-02,Billed consumption (daily),R,dma02_customer_cumulative_water_volume,m3

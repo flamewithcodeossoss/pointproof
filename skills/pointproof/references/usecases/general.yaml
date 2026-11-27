@@ -1,0 +1,42 @@
+# PointProof use-case library: general (any site: buildings, plants, utilities, process)
+#
+# These use cases need no equipment filter: they apply wherever the points exist.
+# Pattern rules are the same as in buildings.yaml.
+
+version: 2
+domain: general
+usecases:
+
+  - id: sensor-data-quality
+    title: Sensor and data-quality checks
+    method: [rules]
+    why: Flatline, range, spike and gap checks are fixed comparisons; every other use case depends on them.
+    slots:
+      - {key: measurements, label: Analog measurements, required: true, match: {name: [_sensor, temperature, pressure, \bflow\b, \blevel\b, humidity, \bspeed\b, \bcurrent\b, voltage, vibration, \bpower\b], units: ['.*[a-z%°³²].*'], exclude: [setpoint, \bsp\b, alarm, fault, status, command, \bcmd\b]}}
+      - {key: comms, label: Device online or communication status, required: false, match: {name: [online_status, connectivity_status, comm_status, comms, communication, \boffline\b]}}
+    external: [Physical range per point type (e.g. 0–100 % for valves), Expected reporting interval]
+    logic:
+      - 'Flatline: no change beyond a small band for a set time (e.g. 6 h) while related equipment runs.'
+      - 'Out of range: value outside the physical range for its type or units.'
+      - 'Spike: step change larger than a set rate between two samples.'
+      - 'Gap: no new value for more than 3 reporting intervals, or the device reports offline.'
+      - Score each point and rank the worst; exclude bad data from every other use case.
+    output: Data-quality flag and score per point; weekly list of suspect sensors.
+    runs: Hourly checks; weekly list
+    history: None
+
+  - id: short-cycling
+    title: Equipment short-cycling
+    method: [rules]
+    why: Counting starts from run-status changes is arithmetic; no model needed.
+    slots:
+      - {key: run, label: 'Run status of any motor, pump, compressor, fan or unit', required: true, match: {name: [run_status, \brun_(state|feedback|fb)\b, \brunning_status\b, on_off_status], exclude: [schedule, command, \bcmd\b]}}
+      - {key: power, label: Power (to size the extra wear and energy), required: false, match: {name: [power_sensor, _power$, \bkw\b], units: ['[km]?w']}}
+    external: [Manufacturer limit on starts per hour and minimum on and off times]
+    logic:
+      - Count off-to-on changes per asset per hour; flag above the manufacturer limit (e.g. 6 starts per hour).
+      - Flag on or off periods shorter than the minimum time (e.g. 5 min).
+      - Rank assets by starts per day; the agent explains the likely cause (oversizing, tight deadband, control hunting).
+    output: Short-cycling alerts per asset with starts per hour and the worst periods.
+    runs: Daily
+    history: None

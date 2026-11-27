@@ -1,0 +1,9 @@
+TagName,Description,EngUnits,IOAddress
+AHU01.SAT,Supply air temperature,°C,BACnet:1001.AI1
+AHU01.SATSP,Supply air temperature setpoint,°C,BACnet:1001.AV1
+AHU01.RUN,Supply fan run status,,BACnet:1001.BI1
+AHU01.CHWV,Chilled water valve,%,BACnet:1001.AO1
+CH01.CHWST,Chilled water supply temperature,°C,Modbus:40001
+CH01.KW,Chiller power,kW,Modbus:40011
+MDB.KWH,Main meter energy,kWh,Modbus:30001
+MDB.KW,Main meter demand,kW,Modbus:30003

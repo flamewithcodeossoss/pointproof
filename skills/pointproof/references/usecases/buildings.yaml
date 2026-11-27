@@ -1,0 +1,431 @@
+# PointProof use-case library: buildings
+#
+# Patterns are matched against NORMALISED text (see scripts/textnorm.py): lower-case words with
+# accents dropped, camelCase split and abbreviations expanded (SAT -> supply air temperature,
+# SP -> setpoint, kW -> power kw...). "Run Status", "RunStatus" and "RUN-STATUS" all read "run status",
+# and `_` in a pattern matches any separator. Put short tokens in word boundaries, written '\bkw\b'
+# in single quotes, so "kw" does not match "kwh".
+# Each use case lists the point "slots" it needs. A slot matches a point when one of its
+# `name` patterns (case-insensitive regex) is found in the point's name or its description, or one
+# of its `units` patterns matches the point's whole units value (e.g. kWh), and, if `equipment` is
+# given, one of those patterns is found in the point's system, equipment or asset.
+# `exclude` patterns reject a point even when a `name` pattern matched.
+# `writable: true` means the point must be R/W (used for setpoint recommendations).
+#
+# method: the simplest method that meets the use case, on the ladder
+#   rules < statistics < optimisation < ml   (genai is added when language is involved)
+# Contributions welcome: keep each use case generic (no client data). Domain packs can live in
+# their own file and be passed with match_usecases.py --library.
+
+version: 2
+domain: buildings
+usecases:
+
+  - id: energy-baseline
+    title: Weather-normalised energy baseline
+    method: [statistics]
+    standards: [IPMVP Option C, ASHRAE Guideline 14]
+    why: A linear model of daily energy on degree days (and occupancy where counted). It can be checked in a spreadsheet and needs no ML training.
+    slots:
+      - {key: energy, label: Energy meter consumption, required: true, match: {name: [energy, kwh, cumulative_water_volume], units: ['[kmg]?wh', gj, mmbtu, 'therms?']}}
+      - {key: outdoor_temp, label: Outdoor air temperature (or a weather API), required: false, match: {name: [outside_air_temperature, outdoor_air_temperature, outdoor_ambient_temperature, '(outside|outdoor|ambient)_(air_)?temp'], exclude: [setpoint]}}
+      - {key: occupancy, label: Occupancy count, required: false, match: {name: [occupancy_count, people_count, occupancy_percentage, headcount]}}
+    external: [Hourly outdoor temperature per site (weather service) if no outdoor sensor exists, Working days and holidays]
+    logic:
+      - Sum each meter per day and drop days with missing or flagged data.
+      - Compute cooling degree days from outdoor temperature against a configurable base.
+      - Regress daily energy on degree days, with occupancy and a working-day flag when available, over 3 to 12 months of data.
+      - Use the model only when CV(RMSE) and NMBE are within ASHRAE Guideline 14 limits; if not, keep the last accepted model.
+      - Each day compare the measured value with the model's prediction; refit once a month.
+    output: 'Per meter and day: predicted kWh, gap in kWh and %; fit statistics each month.'
+    runs: Daily; refit monthly
+    history: 3 months minimum; 12 months to cover every season
+
+  - id: meter-balance-drift
+    title: Sub-meter reconciliation against the main meter
+    method: [statistics]
+    standards: [CUSUM (cumulative sum control chart)]
+    why: The main meter minus its sub-meters is simple arithmetic; a cumulative sum of that gap shows slow drift.
+    slots:
+      - {key: energy, label: Meter consumption (parent and sub-meters), required: true, match: {name: [energy, kwh, cumulative_water_volume], units: ['[kmg]?wh', gj, m3, m³, gal, l]}}
+      - {key: comms, label: Meter online or connectivity status, required: false, match: {name: [online_status, connectivity_status, comm_status]}}
+    external: ['Meter tree: which sub-meters feed from which main meter']
+    logic:
+      - 'Each day: gap = main meter − total of its sub-meters, as kWh and as a share of the main meter.'
+      - Alert when the share stays above a chosen limit for several days.
+      - Track a CUSUM of the daily share against its early baseline to catch gradual drift.
+      - Skip days where any meter in the tree lost communication.
+    output: Alerts naming the meter tree, the size of the gap and when it started; daily gap tags.
+    runs: Daily
+    history: Gap check from the first day; drift once a baseline exists (about 3 months)
+
+  - id: portfolio-benchmarking
+    title: Energy use intensity benchmark across buildings
+    method: [statistics]
+    standards: [Energy use intensity (kWh/m²)]
+    why: Ratios and rankings among buildings of the same type; no ML.
+    slots:
+      - {key: energy, label: Building energy consumption, required: true, match: {name: [energy, kwh], units: ['[kmg]?wh', gj, mmbtu]}}
+      - {key: area, label: Floor area (point or master data), required: false, match: {name: [\barea\b]}}
+    external: [Floor area and building type, Predicted energy from the weather-normalised baseline]
+    logic:
+      - Monthly kWh per m² for each building.
+      - Performance ratio = measured ÷ weather-normalised prediction.
+      - Rank buildings within each type; the agent comments on the leaders and laggards.
+    output: Monthly ranking table with a short written commentary.
+    runs: Monthly
+    history: 3 months
+
+  - id: fault-energy-cost
+    title: Wasted energy and cost per active fault
+    method: [rules]
+    why: Energy above normal while a fault is active, priced at the tariff.
+    slots:
+      - {key: fault, label: Equipment fault or alarm status, required: true, match: {name: [fault_status, alarm, fault, '\btrip(ped)?\b']}}
+      - {key: power, label: Power (kW) on the asset or its meter, required: true, match: {exclude: [power_factor], name: [power, demand_kw, _kw\b], units: ['[km]?w']}}
+    external: [Fault start and end times from the fault-detection system, Tariff, Which meter serves which asset]
+    logic:
+      - While the fault is active, excess kWh = (measured kW − normal kW for that load) × hours.
+      - Without a power point, use nameplate kW × hours and label the figure as an estimate.
+      - Cost = excess kWh × tariff.
+    output: Each fault alert carries its excess kWh, its cost and whether the figure is measured or estimated.
+    runs: When a fault clears, and once a day for faults still open
+    history: None
+
+  - id: ecm-out-of-hours
+    title: Equipment running outside its schedule
+    method: [rules]
+    why: Comparing a run status with the time schedule is a direct check.
+    slots:
+      - {key: run, label: Run status, required: true, match: {equipment: [ahu, air handling, fcu, fan coil, fresh air, \bdx\b, chiller, pump, unit, compressor, motor, fan], exclude: [schedule], name: [run_status, fan_status, \brun_(state|feedback|fb)\b, \brunning_status\b]}}
+      - {key: schedule, label: Schedule status, required: true, match: {name: [schedule]}}
+      - {key: power, label: Power or fan speed (to size the saving), required: false, match: {exclude: [power_factor], name: [power, fan_speed, supply_fan_speed], units: ['[km]?w']}}
+    external: [Operating hours, Nameplate kW for units without a power point, Tariff]
+    logic:
+      - Raise a finding when a unit is on outside its scheduled hours with no manual override, for at least half an hour (adjustable).
+      - Waste = hours × kW (measured, or nameplate scaled by fan speed) × tariff.
+      - Sort findings by monthly cost; the agent words each recommendation.
+    output: Energy-saving recommendations sorted by estimated monthly cost.
+    runs: Rules daily; sorted list weekly
+    history: None
+
+  - id: ecm-unoccupied-conditioning
+    title: Conditioning or lighting unoccupied zones
+    method: [rules]
+    why: Compares whether a space is occupied with whether its equipment is on.
+    slots:
+      - {key: occupancy, label: Zone occupancy, required: true, match: {name: [occupancy_status, occupancy_sensor, occupancy_count]}}
+      - {key: run, label: Unit or lighting run status, required: true, match: {exclude: [schedule], name: [run_status, lighting_zone]}}
+    external: [Which units and lighting circuits serve which zone]
+    logic:
+      - Raise a finding when a zone has been empty for an hour (adjustable) while its unit or lights keep running.
+      - Waste = hours × kW × tariff.
+    output: Findings per zone with estimated waste.
+    runs: Daily
+    history: None
+
+  - id: ecm-excess-fresh-air
+    title: Excess fresh air
+    method: [rules]
+    why: Compares damper opening with measured CO2.
+    slots:
+      - {key: damper, label: Outdoor or fresh air damper position, required: true, match: {name: [outdoor_air_damper, freshair_damper, fresh_air_damper]}}
+      - {key: co2, label: CO2 level, required: true, match: {name: [co2]}}
+    logic:
+      - Raise a finding when the outdoor-air damper stays open beyond its minimum while CO2 remains low (for example under 600 ppm).
+    output: Recommendation to lower the minimum outdoor-air position, with the supporting trend.
+    runs: Daily
+    history: None
+
+  - id: chw-setpoint-reset
+    title: Chilled-water supply setpoint reset (rule-based)
+    method: [rules]
+    standards: [ASHRAE Guideline 36 (trim and respond)]
+    why: Trim-and-respond logic with fixed limits; each change needs operator approval. No forecasting.
+    slots:
+      - {key: chws_sp, label: Chilled-water supply setpoint (writable), required: true, writable: true, match: {name: [chilled_water_supply_temperature.*setpoint, chilled_water.*setpoint]}}
+      - {key: valve, label: AHU or FCU cooling valve position, required: true, match: {name: [cooling_valve, chilled_water_valve]}}
+      - {key: zone_temp, label: Zone temperature, required: false, match: {exclude: [setpoint, \bsp\b], name: [zone_air_temperature, zone_temperature, room_temperature, room_air_temperature, '(zone|room|space)_(air_)?temp']}}
+      - {key: chws, label: Chilled-water supply temperature, required: false, match: {exclude: [setpoint], name: [chilled_water_supply_temperature]}}
+    external: [Air handlers and fan coils served by each chiller plant, Setpoint limits agreed with the owner and the chiller maker]
+    logic:
+      - Raise the setpoint a small step when all cooling valves have stayed well below fully open and zones are comfortable for a while.
+      - Lower it a step when several valves are nearly fully open or a zone runs warm.
+      - Keep within the agreed limits and change no more than once an hour per plant; the operator approves each change.
+    output: 'Recommendation in the operator queue: current value, proposed value, reason and limits.'
+    runs: Every 15 min
+    history: None
+
+  - id: zone-setback
+    title: Unoccupied zone setpoint setback
+    method: [rules]
+    why: An empty zone gets a fixed setback that is removed when people return.
+    slots:
+      - {key: occupancy, label: Zone occupancy, required: true, match: {name: [occupancy]}}
+      - {key: zone_sp, label: Zone temperature setpoint (writable), required: true, writable: true, match: {name: [zone_air_temperature.*setpoint, zone_temperature.*setpoint, room.*temperature.*setpoint]}}
+    logic:
+      - When a zone has been empty for an hour during operating hours, propose raising its cooling setpoint by about 2 °C; return to normal once occupied.
+    output: Setback proposals per zone awaiting approval.
+    runs: Every 15 min
+    history: None
+
+  - id: alarm-kpis
+    title: Alarm system performance (ISA-18.2 KPIs)
+    method: [statistics]
+    standards: [ISA-18.2, EEMUA 191]
+    why: Counts, rates and durations from the alarm log, plus alarms that tend to fire at the same time.
+    slots:
+      - {key: alarms, label: Alarm or fault points, required: true, match: {name: [fault_status, alarm, fault_code, '\btrip(ped)?\b']}}
+    external: ['Alarm log with raise, clear and acknowledge times and priority']
+    logic:
+      - Compute alarms per operator per hour, floods, chattering and standing alarms, and the most frequent sources.
+      - Find alarms that repeatedly fire together on connected equipment, and alarms that return after a work order is closed.
+      - Suggest shelving, new limits, on-delays or grouping; the agent writes a summary per shift.
+    output: Weekly alarm performance report, suggested alarm changes and shift summaries.
+    runs: Each shift and weekly
+    history: 30 days
+
+  - id: maintenance-prioritisation
+    title: Maintenance priority score from faults and run hours
+    method: [rules]
+    why: A weighted score from asset criticality, fault cost and run hours, followed by a draft work order.
+    slots:
+      - {key: fault, label: Fault status, required: true, match: {name: [fault_status, fault, '\btrip(ped)?\b']}}
+      - {key: hours, label: Run hours, required: false, match: {name: [run_hours, run_time, (running|operating)_(hours|time), 'hours?_run', 'hour_?meter']}}
+      - {key: wo, label: CMMS work-order fields, required: false, match: {name: [work order, work_order, \bwo\b]}}
+    external: [Asset criticality list, Service intervals]
+    logic:
+      - Priority = criticality × fault severity × daily cost × days the fault has been open, plus a term for run hours beyond the service interval.
+      - Map score ranges to response times and merge faults on the same asset.
+      - A draft work order is prepared for the operator to approve.
+    output: Sorted maintenance list with draft work orders.
+    runs: Daily
+    history: None
+
+  - id: work-order-prioritisation
+    title: Open work orders ranked by criticality and SLA
+    method: [rules, statistics]
+    why: A weighted score plus typical fix times (medians) taken from closed work orders.
+    slots:
+      - {key: wo, label: Work-order status and dates, required: true, match: {name: [work order, work_order, wo_status, completion]}}
+      - {key: sla, label: SLA fields, required: false, match: {name: [\bsla\b, overdue]}}
+    external: [Asset criticality list, Target response time per priority]
+    logic:
+      - Urgency = criticality × priority × how close the order is to its SLA.
+      - Typical fix time per work type = median of recent closed orders; flag orders likely to miss their SLA.
+    output: Sorted queue with at-risk flags and a daily summary for supervisors.
+    runs: Every 15 min; summary daily
+    history: 3–6 months of closed work orders
+
+  - id: carbon-trajectory
+    title: Emissions tracking against a reduction target
+    method: [statistics]
+    standards: [GHG Protocol (Scope 2)]
+    why: Energy multiplied by an emission factor, projected with and without planned projects.
+    slots:
+      - {key: energy, label: Energy consumption, required: true, match: {name: [energy, kwh, \bgas\b], units: ['[kmg]?wh', gj, mmbtu, 'therms?']}}
+      - {key: factor, label: Carbon intensity factor (point or configured), required: false, match: {name: [carbon]}}
+    external: [Reduction targets, Planned projects with expected savings and dates]
+    logic:
+      - Monthly emissions = energy × emission factor for each energy stream.
+      - Project two lines, no action and with planned projects, and show the yearly gap to the target.
+    output: Emissions table and chart with a written summary.
+    runs: Monthly
+    history: 12 months
+
+  - id: retrofit-roi
+    title: Retrofit payback from the measured baseline
+    method: [rules]
+    why: Arithmetic on measured energy and maintenance cost.
+    slots:
+      - {key: energy, label: Asset or meter energy, required: true, match: {exclude: [power_factor], name: [energy, kwh, power], units: ['[kmg]?wh', '[km]?w']}}
+      - {key: cost, label: Maintenance labour and materials, required: false, match: {name: ['\blabou?r\b', materials]}}
+    external: [Project cost and expected saving, Tariff]
+    logic:
+      - Yearly saving = energy cost × expected saving share + maintenance cost no longer needed.
+      - Simple payback and return on investment; the agent writes a short business case.
+    output: Short business case per project.
+    runs: On request
+    history: 12 months
+
+  - id: copilot-nlq
+    title: Natural-language copilot over the points
+    method: [genai]
+    why: The model only turns questions into read-only queries and phrases the result; all figures come from the data.
+    slots:
+      - {key: any, label: Any time-series point, required: true, match: {name: [sensor, status, temperature, energy, power, flow, level, pressure]}}
+    logic:
+      - Interpret the question, pick the points and time range, run read-only queries, and answer only from their results, citing the points used.
+    output: Reply in chat, with a small table or chart and the points it used.
+    runs: On demand
+    history: None
+
+  - id: incident-timeline
+    title: Incident summary drafted from alarms and work orders
+    method: [genai]
+    why: The agent puts alarms, events and work orders in time order and spots repeats.
+    slots:
+      - {key: alarms, label: Alarm or fault points, required: true, match: {name: [fault_status, alarm]}}
+      - {key: wo, label: Work-order fields, required: false, match: {name: [work order, work_order]}}
+    external: [Alarm and event log]
+    logic:
+      - Gather alarms on the affected and connected equipment before and after the event, with acknowledgements and work orders.
+      - Group similar incidents by equipment type and fault and mark repeats.
+    output: Incident report and a monthly list of recurring problems.
+    runs: Per incident; monthly
+    history: None
+
+  - id: equipment-degradation
+    title: Efficiency drift against commissioning (kW/TR, delta-T)
+    method: [statistics]
+    why: A monthly efficiency figure compared with its commissioning value; ML only if a simple trend is not enough.
+    slots:
+      - {key: power, label: Chiller or unit power, required: true, match: {exclude: [power_factor], name: [power], units: ['[km]?w']}}
+      - {key: temps, label: Supply and return temperatures, required: true, match: {exclude: [setpoint], name: [supply_temperature, return_temperature, supply_air_temperature]}}
+    logic:
+      - Each month compute an efficiency figure per asset (for example kW per ton or delta-T) at similar load; alert when its trend passes a limit.
+    output: Drift alerts with the supporting trend.
+    runs: Monthly
+    history: 6 months
+
+  - id: demand-forecast
+    title: Day-ahead building load forecast
+    method: [ml]
+    why: A reliable forecast needs a trained time-series model, retraining and accuracy tracking.
+    slots:
+      - {key: energy, label: Meter consumption history, required: true, match: {name: [energy, kwh], units: ['[kmg]?wh']}}
+    external: [Weather forecast service]
+    logic:
+      - Train a time-series model per meter on past load, weather forecast and calendar; retrain on a schedule and track accuracy.
+    output: Forecast tags and early peak warnings.
+    runs: Hourly
+    history: 12 months
+
+  - id: remaining-useful-life
+    title: Failure prediction (remaining useful life)
+    method: [ml]
+    why: Needs recorded failures and a trained survival or degradation model.
+    slots:
+      - {key: hours, label: Run hours, required: true, match: {name: [run_hours, run_time, (running|operating)_(hours|time), 'hours?_run', 'hour_?meter']}}
+      - {key: fault, label: Fault history, required: true, match: {name: [fault]}}
+    external: [Failure records from the CMMS]
+    logic:
+      - Fit survival or degradation models per equipment class from failure records and operating data.
+    output: Expected time to failure with an uncertainty range.
+    runs: Monthly
+    history: Several years of failure records
+
+  - id: occupancy-forecast
+    title: Occupancy forecast by space
+    method: [ml]
+    why: Going beyond weekly average profiles needs a trained forecasting model.
+    slots:
+      - {key: occupancy, label: People counting, required: true, match: {name: [occupancy_count, entry_count, people]}}
+    logic:
+      - Train a model per space on counts, calendar and events.
+    output: Occupancy forecast per space.
+    runs: Hourly
+    history: 12 months
+
+  # ---------------------------------------------------------------- optimisation (operations research)
+
+  - id: maintenance-scheduling
+    title: Maintenance scheduling to technicians and days
+    method: [optimisation]
+    standards: [Constraint programming (CP-SAT)]
+    why: Assigning prioritised tasks to technicians, skills and days within working hours is an assignment-with-capacity problem; a solver finds the best feasible plan.
+    solver: scripts/optimise/schedule_maintenance.py
+    slots:
+      - {key: fault, label: Fault or alarm status (to create tasks), required: true, match: {name: [fault, alarm]}}
+      - {key: hours, label: Run hours (service intervals), required: false, match: {name: [run_hours, run_time, (running|operating)_(hours|time), 'hours?_run', 'hour_?meter']}}
+      - {key: wo, label: CMMS work-order fields, required: false, match: {name: [work_order, wo_status]}}
+    external: [Technicians with skills and shift hours, Task durations per work type, Priority scores from maintenance-prioritisation]
+    logic:
+      - Build tasks from open faults and due services, each with a priority score, skill, duration and due day.
+      - 'Solve: each task to at most one technician-day; skills must match; hours per technician-day ≤ shift; reward high scores early, penalise lateness.'
+      - Unscheduled tasks are reported with the constraint that blocked them; the operator approves the plan.
+    output: Daily schedule per technician and the list of tasks that did not fit.
+    runs: Daily, and on new critical faults
+    history: None
+
+  - id: work-order-assignment
+    title: Work-order assignment to teams
+    method: [optimisation]
+    why: Matching open work orders to teams by skill, location and SLA risk is a classic assignment problem.
+    solver: scripts/optimise/schedule_maintenance.py
+    slots:
+      - {key: wo, label: Work-order status and dates, required: true, match: {name: [work_order, completion, wo_status]}}
+      - {key: team, label: Assigned team or contractor, required: false, match: {name: [assigned, contractor, team]}}
+    external: [Team skills, capacity and coverage areas, SLA targets]
+    logic:
+      - Score each work order (criticality × SLA proximity); estimate duration from history medians.
+      - Assign work orders to teams to maximise on-time completions within each team's hours.
+    output: Suggested assignment per team, for the supervisor to confirm.
+    runs: Every 15 min
+    history: 3 months of work orders
+
+  - id: retrofit-portfolio
+    title: Retrofit selection within a budget
+    method: [optimisation]
+    standards: [0/1 knapsack (integer programming)]
+    why: Choosing which projects to fund under a budget, with mutually exclusive options, is a knapsack problem.
+    solver: scripts/optimise/budget_select.py
+    slots:
+      - {key: energy, label: Energy use of the assets concerned, required: true, match: {exclude: [power_factor], name: [energy, kwh, power], units: ['[kmg]?wh', '[km]?w']}}
+    external: [Candidate projects with cost, expected saving and CO2, Budget]
+    logic:
+      - Saving per project from the baseline; cost from estimates.
+      - 'Solve: maximise annual saving (or CO2) with total cost ≤ budget and at most one option per asset.'
+    output: Funded list, total cost, saving, payback; the binding constraint is reported.
+    runs: On request (budget cycle)
+    history: 12 months
+
+  - id: consumables-reorder
+    title: Consumables reorder points and order quantities
+    method: [optimisation]
+    standards: [Inventory theory ((s, Q) policy, EOQ)]
+    why: Reorder point and order quantity follow from usage rate, lead time and service level.
+    solver: scripts/optimise/reorder.py
+    slots:
+      - {key: level, label: Consumable level, required: true, match: {name: [consumable, dispenser, refill, soap, towel]}}
+      - {key: occupancy, label: Occupancy (to scale usage), required: false, match: {name: [occupancy, people_count, entry_count]}}
+    external: [Lead time and order cost per item, Service level]
+    logic:
+      - Daily usage from level drops (scaled by occupancy where available).
+      - Safety stock = z × σ × √(lead time); reorder point = usage × lead time + safety stock; EOQ for the order size.
+    output: Reorder point, safety stock and order quantity per item; alerts when stock reaches the reorder point.
+    runs: Daily
+    history: 8 weeks of level data
+
+  - id: waste-collection-routing
+    title: Bin collection planning and routing
+    method: [statistics, optimisation]
+    standards: [Capacitated vehicle routing (CVRP)]
+    why: Fill rate per bin is a weekday average (statistics); choosing and ordering tomorrow's pickups within truck capacity is a routing problem.
+    solver: scripts/optimise/route_collection.py
+    slots:
+      - {key: fill, label: Bin fill level, required: true, match: {name: [fill_level, bin_fill, bin_level]}}
+    external: [Bin locations, Truck count and capacity, Depot]
+    logic:
+      - Fill rate per bin and weekday from history.
+      - A bin is due when its expected level tomorrow passes the threshold (e.g. 80%).
+      - 'Solve CVRP: visit every due bin once, within truck capacity, minimising distance.'
+    output: Tomorrow's routes per truck and the bins skipped.
+    runs: Daily
+    history: 4–8 weeks of fill data
+
+  - id: cleaning-rostering
+    title: Cleaning rota driven by footfall
+    method: [statistics, optimisation]
+    why: Demand per zone from occupancy profiles (statistics); placing cleaners across shifts and zones within headcount is a rostering problem.
+    solver: scripts/optimise/schedule_maintenance.py
+    slots:
+      - {key: occupancy, label: Zone occupancy or footfall, required: true, match: {name: [occupancy, entry_count, people_count, footfall]}}
+      - {key: requests, label: Cleaning requests or events, required: false, match: {name: [service_request, cleaning, task]}}
+    external: [Staff, shifts and zone travel times, Service levels per zone]
+    logic:
+      - Expected demand per zone and hour from weekday profiles.
+      - Assign staff to zones and shifts to cover demand within headcount and break rules.
+    output: Shift plan per zone, with uncovered demand flagged.
+    runs: Daily
+    history: 8 weeks

@@ -1,0 +1,509 @@
+{
+ "project": "Northgate Office Campus (fictional demo)",
+ "points_source": "points.csv",
+ "policy": {
+  "max_method": "optimisation"
+ },
+ "items": [
+  {
+   "ref": "REQ-01",
+   "title": "Find plant running when the building is empty",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "ecm-out-of-hours",
+   "method": [
+    "rules",
+    "genai"
+   ],
+   "why": "A run status compared with the time schedule and occupancy is a direct check; GenAI only writes the weekly summary.",
+   "points": [
+    {
+     "id": 7,
+     "name": "AHU1.SF.STS"
+    },
+    {
+     "id": 12,
+     "name": "AHU1.SCHED"
+    },
+    {
+     "id": 9,
+     "name": "AHU1.KW"
+    },
+    {
+     "id": 16,
+     "name": "FCU301.STS"
+    },
+    {
+     "id": 15,
+     "name": "FCU301.OCC"
+    },
+    {
+     "id": 21,
+     "name": "CH1.STS"
+    },
+    {
+     "id": 25,
+     "name": "CH1.KW"
+    },
+    {
+     "id": 28,
+     "name": "CHWP1.STS"
+    },
+    {
+     "id": 39,
+     "name": "PC.ENT.CNT"
+    }
+   ],
+   "other_inputs": "Building calendar (public holidays).",
+   "logic": [
+    "Every 15 min: equipment on outside its scheduled hours, or with zone and entrance counts at zero (e.g. for 30 min).",
+    "Energy wasted = measured kW × time running out of hours.",
+    "Weekly: rank by kWh wasted; GenAI drafts a short note per item for the energy manager."
+   ],
+   "output": "Out-of-hours events per asset with kWh and cost; weekly summary.",
+   "example": "Sat 14 Nov: AHU-1 ran 06:10–18:40 with the schedule off and 0 people counted; 11.2 kW × 12.5 h = 140 kWh (≈ 21 at 0.15/kWh).",
+   "runs": "Every 15 min; summary weekly",
+   "history": "None"
+  },
+  {
+   "ref": "REQ-02",
+   "title": "Weather-corrected monthly energy performance",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "energy-baseline",
+   "method": [
+    "statistics"
+   ],
+   "why": "A regression of daily energy on cooling degree days and occupancy (IPMVP Option C, ASHRAE Guideline 14). No ML training.",
+   "points": [
+    {
+     "id": 30,
+     "name": "MTR.MAIN.KWH"
+    },
+    {
+     "id": 29,
+     "name": "WS.OAT"
+    },
+    {
+     "id": 39,
+     "name": "PC.ENT.CNT"
+    },
+    {
+     "id": 34,
+     "name": "MTR.MAIN.ONL"
+    }
+   ],
+   "other_inputs": "Building calendar.",
+   "logic": [
+    "Daily kWh from the main incomer; drop days when the meter was offline.",
+    "Cooling degree days from outside air temperature (base e.g. 18 °C, to confirm).",
+    "Fit kWh = a + b × CDD + c × people on 12 months; accept only if CV(RMSE) and NMBE meet Guideline 14.",
+    "Monthly: actual vs expected, in kWh and %."
+   ],
+   "output": "Monthly table and tags: expected kWh, actual kWh, deviation %.",
+   "example": "October: actual 212,400 kWh; expected 198,900 kWh (CDD 402, 1,120 people/day); +6.8%, above the ±5% band.",
+   "runs": "Daily; report monthly; refit quarterly",
+   "history": "12 months"
+  },
+  {
+   "ref": "REQ-03",
+   "title": "Sub-meter reconciliation",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "meter-balance-drift",
+   "method": [
+    "statistics"
+   ],
+   "why": "Main minus the sum of sub-meters is arithmetic; drift is a running sum (CUSUM) of that gap.",
+   "points": [
+    {
+     "id": 30,
+     "name": "MTR.MAIN.KWH"
+    },
+    {
+     "id": 35,
+     "name": "MTR.HVAC.KWH"
+    },
+    {
+     "id": 36,
+     "name": "MTR.LTG.KWH"
+    },
+    {
+     "id": 37,
+     "name": "MTR.SP.KWH"
+    },
+    {
+     "id": 34,
+     "name": "MTR.MAIN.ONL"
+    }
+   ],
+   "logic": [
+    "Daily: unmetered = main − (HVAC + lighting + small power).",
+    "Baseline share of unmetered load from the first 60 days.",
+    "CUSUM on the daily share; alert when it crosses its limit (e.g. 5 × daily std, to confirm)."
+   ],
+   "output": "Daily reconciliation tags and drift alerts.",
+   "example": "Unmetered load rose from 6% to 13% over 9 days; CUSUM limit crossed on 19 Nov; likely a failed CT on the small power board.",
+   "runs": "Daily",
+   "history": "60 days",
+   "missing": [
+    "CT ratios and sub-meter hierarchy (master data)"
+   ]
+  },
+  {
+   "ref": "REQ-04",
+   "title": "Chilled-water temperature reset",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "chw-setpoint-reset",
+   "method": [
+    "rules"
+   ],
+   "why": "Trim-and-respond on cooling valve positions is a fixed rule; no forecasting needed.",
+   "points": [
+    {
+     "id": 24,
+     "name": "CH1.CHWSTSP"
+    },
+    {
+     "id": 22,
+     "name": "CH1.CHWST"
+    },
+    {
+     "id": 6,
+     "name": "AHU1.CLGVLV"
+    },
+    {
+     "id": 13,
+     "name": "FCU301.ZNT"
+    },
+    {
+     "id": 18,
+     "name": "FCU302.ZNT"
+    }
+   ],
+   "logic": [
+    "Every 10 min: if the AHU cooling valve is below 85% open and zones are within setpoint, raise the setpoint by 0.3 °C.",
+    "If the valve is above 95% or a zone is 1 °C above setpoint, lower by 0.5 °C.",
+    "Limits 6.5–10 °C (to confirm). Each change goes to the operator for approval before it is written."
+   ],
+   "output": "Setpoint recommendation queue with reason; written to CH1.CHWSTSP after approval.",
+   "example": "13:20: valve 62%, zones 23.1 / 23.4 °C (setpoints 24 °C); recommend 7.0 → 7.3 °C.",
+   "runs": "Every 10 min",
+   "history": "None"
+  },
+  {
+   "ref": "REQ-05",
+   "title": "Fresh-air reduction on low CO2",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "ecm-excess-fresh-air",
+   "method": [
+    "rules"
+   ],
+   "why": "Damper position against a CO2 band is a fixed demand-controlled ventilation rule.",
+   "points": [
+    {
+     "id": 5,
+     "name": "AHU1.OAD"
+    },
+    {
+     "id": 4,
+     "name": "AHU1.RACO2"
+    },
+    {
+     "id": 7,
+     "name": "AHU1.SF.STS"
+    }
+   ],
+   "logic": [
+    "While the fan runs: if return CO2 < 600 ppm and the damper is above minimum, recommend the minimum position (e.g. 20%).",
+    "If CO2 > 900 ppm, recommend opening in 10% steps. Operator approves before writing."
+   ],
+   "output": "Damper recommendations and hours of excess fresh air per week.",
+   "example": "Tue 10:00–15:00: CO2 480–560 ppm with the damper at 65%; recommend 20%.",
+   "runs": "Every 15 min",
+   "history": "None"
+  },
+  {
+   "ref": "REQ-06",
+   "title": "Peak demand warnings",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "peak-demand-alerts",
+   "method": [
+    "rules"
+   ],
+   "why": "Projecting the current demand interval against the month's peak is arithmetic.",
+   "points": [
+    {
+     "id": 31,
+     "name": "MTR.MAIN.KW"
+    },
+    {
+     "id": 32,
+     "name": "MTR.MAIN.KWPK"
+    }
+   ],
+   "other_inputs": "Contracted demand limit; demand interval length (e.g. 30 min).",
+   "logic": [
+    "Every minute: projected interval average = energy so far ÷ elapsed time.",
+    "Warn when the projection exceeds the month's peak or 95% of the contracted limit."
+   ],
+   "output": "Warning with minutes left in the interval and kW to shed.",
+   "example": "14:12: projected 1,410 kW against a month peak of 1,380 kW; shed 30 kW within 18 min.",
+   "runs": "Every minute",
+   "history": "None"
+  },
+  {
+   "ref": "REQ-07",
+   "title": "Maintenance scheduling across the technician team",
+   "group": "Maintenance",
+   "verdict": "applicable",
+   "usecase": "maintenance-scheduling",
+   "method": [
+    "optimisation"
+   ],
+   "solver": "assignment with capacity (CP-SAT)",
+   "why": "Assigning tasks to technicians and days within skills, hours and due dates is an assignment problem; a solver gives the best feasible week.",
+   "points": [
+    {
+     "id": 44,
+     "name": "CMMS.WO.ID"
+    },
+    {
+     "id": 45,
+     "name": "CMMS.WO.STATUS"
+    },
+    {
+     "id": 46,
+     "name": "CMMS.WO.PRIORITY"
+    },
+    {
+     "id": 48,
+     "name": "CMMS.WO.SLADUE"
+    },
+    {
+     "id": 11,
+     "name": "AHU1.FLT"
+    },
+    {
+     "id": 27,
+     "name": "CH1.FLT"
+    },
+    {
+     "id": 17,
+     "name": "FCU301.ALM"
+    },
+    {
+     "id": 10,
+     "name": "AHU1.HRS"
+    },
+    {
+     "id": 26,
+     "name": "CH1.HRS"
+    }
+   ],
+   "other_inputs": "Technician skills, shifts and hours; task durations by type.",
+   "logic": [
+    "Tasks = open work orders plus faults without a work order plus run-hour service intervals due this week.",
+    "Variables: task × technician × day. Constraints: skill match, hours per day, one technician per task.",
+    "Maximise priority served minus a penalty per day late; solve with CP-SAT (see scripts/optimise/schedule_maintenance.py).",
+    "Supervisor approves the plan before work orders are updated."
+   ],
+   "output": "Weekly plan per technician and day; unscheduled tasks with the reason.",
+   "example": "Week 48: 23 tasks, 21 scheduled; T2 Monday: chiller fault WO-311 (4 h) then AHU-1 filter (1 h); 2 low-priority tasks moved to next week.",
+   "runs": "Daily at 06:00",
+   "history": "None",
+   "missing": [
+    "Technician skills and shift rota (CMMS master data)"
+   ]
+  },
+  {
+   "ref": "REQ-08",
+   "title": "Washroom consumables restocking",
+   "group": "Operations",
+   "verdict": "applicable",
+   "usecase": "consumables-reorder",
+   "method": [
+    "statistics",
+    "optimisation"
+   ],
+   "solver": "inventory (s, Q) policy",
+   "why": "Usage per visitor is an average (statistics); the reorder point and order quantity come from a standard inventory model.",
+   "points": [
+    {
+     "id": 42,
+     "name": "WC.G.SOAP"
+    },
+    {
+     "id": 43,
+     "name": "WC.G.TOWEL"
+    },
+    {
+     "id": 39,
+     "name": "PC.ENT.CNT"
+    }
+   ],
+   "other_inputs": "Supplier lead time, unit cost, order cost.",
+   "logic": [
+    "Daily usage = drop in dispenser level, scaled to people counted.",
+    "Refill task when a dispenser is below 20%.",
+    "Reorder point = demand over lead time + safety stock (z × σ × √L); order quantity by EOQ (see scripts/optimise/reorder.py)."
+   ],
+   "output": "Refill tasks for the cleaning team; weekly order list.",
+   "example": "Towels: 41 packs/day average (σ 9), lead time 5 days; reorder at 238 packs, order 610.",
+   "runs": "Hourly refills; weekly orders",
+   "history": "4 weeks",
+   "missing": [
+    "Stock on hand (stores system)"
+   ]
+  },
+  {
+   "ref": "REQ-09",
+   "title": "Plain-language questions about the building",
+   "group": "Operations",
+   "verdict": "applicable",
+   "usecase": "copilot-nlq",
+   "method": [
+    "genai"
+   ],
+   "why": "A language model turns the question into read-only queries on the points and explains the result; it never writes.",
+   "points": [
+    {
+     "id": 1,
+     "name": "AHU1.SAT"
+    },
+    {
+     "id": 13,
+     "name": "FCU301.ZNT"
+    },
+    {
+     "id": 18,
+     "name": "FCU302.ZNT"
+    },
+    {
+     "id": 21,
+     "name": "CH1.STS"
+    },
+    {
+     "id": 25,
+     "name": "CH1.KW"
+    },
+    {
+     "id": 30,
+     "name": "MTR.MAIN.KWH"
+    },
+    {
+     "id": 31,
+     "name": "MTR.MAIN.KW"
+    },
+    {
+     "id": 39,
+     "name": "PC.ENT.CNT"
+    }
+   ],
+   "logic": [
+    "Map the question to points with the point list and tag descriptions.",
+    "Run read-only queries on live values and history.",
+    "Answer with the numbers and the point tags used, so every answer can be checked."
+   ],
+   "output": "Answers in chat with the tags and time range used.",
+   "example": "Q: Was level 3 warm yesterday afternoon? A: FCU-301 averaged 25.6 °C 14:00–17:00 against 24 °C (FCU301.ZNT); FCU-302 stayed at 24.2 °C.",
+   "runs": "On demand",
+   "history": "As stored"
+  },
+  {
+   "ref": "REQ-10",
+   "title": "Open work orders ranked by urgency",
+   "group": "Maintenance",
+   "verdict": "applicable",
+   "usecase": "work-order-prioritisation",
+   "method": [
+    "rules",
+    "statistics"
+   ],
+   "why": "A weighted score of priority and time left to the SLA, with typical fix times (medians) from closed orders.",
+   "points": [
+    {
+     "id": 44,
+     "name": "CMMS.WO.ID"
+    },
+    {
+     "id": 45,
+     "name": "CMMS.WO.STATUS"
+    },
+    {
+     "id": 46,
+     "name": "CMMS.WO.PRIORITY"
+    },
+    {
+     "id": 48,
+     "name": "CMMS.WO.SLADUE"
+    },
+    {
+     "id": 49,
+     "name": "CMMS.WO.CLOSED"
+    }
+   ],
+   "logic": [
+    "Median time to close per priority from the last 6 months.",
+    "Score = priority weight × (1 + share of SLA time used); flag orders whose median fix time exceeds the time left.",
+    "Re-rank every 30 min."
+   ],
+   "output": "Ranked queue with an at-risk flag.",
+   "example": "WO-327 (P2): 70% of SLA used, median fix 6 h, 4 h left → at risk, rank 1.",
+   "runs": "Every 30 min",
+   "history": "6 months of closed orders"
+  },
+  {
+   "ref": "REQ-11",
+   "title": "Chiller failure prediction weeks ahead",
+   "group": "Maintenance",
+   "verdict": "out_of_scope",
+   "reason": "Needs a trained failure-prediction model (ML); the policy stops at optimisation.",
+   "usecase": "remaining-useful-life"
+  },
+  {
+   "ref": "REQ-12",
+   "title": "Next-day building load forecast",
+   "group": "Energy",
+   "verdict": "out_of_scope",
+   "reason": "Needs a trained forecasting model (ML); the policy stops at optimisation.",
+   "usecase": "demand-forecast"
+  },
+  {
+   "ref": "REQ-13",
+   "title": "Footfall counting from CCTV video",
+   "group": "Operations",
+   "verdict": "out_of_scope",
+   "reason": "Needs video analytics on the CCTV system; no camera feeds are in the points list."
+  }
+ ],
+ "architecture": [
+  {
+   "layer": "Field systems",
+   "does": "BMS, meters, people counter, washroom sensors and CMMS, as in the points list.",
+   "data": "All 49 points.",
+   "owner": "Site owner"
+  },
+  {
+   "layer": "Platform",
+   "does": "Historian with quality flags; CMMS integration.",
+   "data": "Live values, history, work orders.",
+   "owner": "Platform integrator"
+  },
+  {
+   "layer": "Analytics",
+   "does": "Rules, statistics and optimisation jobs; GenAI for summaries and questions.",
+   "data": "Read-only.",
+   "owner": "AI team"
+  },
+  {
+   "layer": "Operator",
+   "does": "Approves setpoint, damper and schedule changes before they are written.",
+   "data": "Recommendation queue.",
+   "owner": "Facility manager"
+  }
+ ]
+}

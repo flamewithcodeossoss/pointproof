@@ -1,0 +1,276 @@
+{
+ "source": "points.csv",
+ "format": "table",
+ "columns": {
+  "id": "#",
+  "system": "System",
+  "equipment": "Equipment",
+  "description": "Point",
+  "name": "Tag",
+  "rw": "Read/Write",
+  "units": "Units"
+ },
+ "count": 26,
+ "points": [
+  {
+   "id": 1,
+   "system": "SCADA",
+   "equipment": "DMA-01 Inlet",
+   "description": "Inlet flow rate",
+   "name": "dma01_inlet_flow_rate",
+   "rw": "R",
+   "units": "m3/h",
+   "asset": ""
+  },
+  {
+   "id": 2,
+   "system": "SCADA",
+   "equipment": "DMA-01 Inlet",
+   "description": "Inlet cumulative volume",
+   "name": "dma01_inlet_cumulative_volume",
+   "rw": "R",
+   "units": "m3",
+   "asset": ""
+  },
+  {
+   "id": 3,
+   "system": "SCADA",
+   "equipment": "DMA-01 Inlet",
+   "description": "Inlet pressure",
+   "name": "dma01_inlet_pressure",
+   "rw": "R",
+   "units": "bar",
+   "asset": ""
+  },
+  {
+   "id": 4,
+   "system": "SCADA",
+   "equipment": "DMA-01 PRV",
+   "description": "PRV outlet pressure",
+   "name": "dma01_prv_outlet_pressure",
+   "rw": "R",
+   "units": "bar",
+   "asset": ""
+  },
+  {
+   "id": 5,
+   "system": "SCADA",
+   "equipment": "DMA-01 PRV",
+   "description": "PRV outlet pressure setpoint",
+   "name": "dma01_prv_pressure_setpoint",
+   "rw": "R/W",
+   "units": "bar",
+   "asset": ""
+  },
+  {
+   "id": 6,
+   "system": "SCADA",
+   "equipment": "DMA-01 Critical point",
+   "description": "Critical point pressure",
+   "name": "dma01_cp_pressure",
+   "rw": "R",
+   "units": "bar",
+   "asset": ""
+  },
+  {
+   "id": 7,
+   "system": "SCADA",
+   "equipment": "DMA-02 Inlet",
+   "description": "Inlet flow rate",
+   "name": "dma02_inlet_flow_rate",
+   "rw": "R",
+   "units": "m3/h",
+   "asset": ""
+  },
+  {
+   "id": 8,
+   "system": "SCADA",
+   "equipment": "DMA-02 Inlet",
+   "description": "Inlet cumulative volume",
+   "name": "dma02_inlet_cumulative_volume",
+   "rw": "R",
+   "units": "m3",
+   "asset": ""
+  },
+  {
+   "id": 9,
+   "system": "SCADA",
+   "equipment": "DMA-02 Inlet",
+   "description": "Inlet pressure",
+   "name": "dma02_inlet_pressure",
+   "rw": "R",
+   "units": "bar",
+   "asset": ""
+  },
+  {
+   "id": 10,
+   "system": "SCADA",
+   "equipment": "DMA-02 Inlet",
+   "description": "High-flow alarm",
+   "name": "dma02_high_flow_alarm",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 11,
+   "system": "SCADA",
+   "equipment": "Reservoir R1",
+   "description": "Tank level",
+   "name": "r1_tank_level",
+   "rw": "R",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 12,
+   "system": "SCADA",
+   "equipment": "Reservoir R1",
+   "description": "Inlet flow",
+   "name": "r1_inlet_flow_rate",
+   "rw": "R",
+   "units": "m3/h",
+   "asset": ""
+  },
+  {
+   "id": 13,
+   "system": "SCADA",
+   "equipment": "Reservoir R1",
+   "description": "Outlet flow",
+   "name": "r1_outlet_flow_rate",
+   "rw": "R",
+   "units": "m3/h",
+   "asset": ""
+  },
+  {
+   "id": 14,
+   "system": "SCADA",
+   "equipment": "Reservoir R1",
+   "description": "High level alarm",
+   "name": "r1_high_level_alarm",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 15,
+   "system": "SCADA",
+   "equipment": "Reservoir R1",
+   "description": "Low level alarm",
+   "name": "r1_low_level_alarm",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 16,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Pump 1 run status",
+   "name": "ps1_pump1_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 17,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Pump 1 run command",
+   "name": "ps1_pump1_run_command",
+   "rw": "R/W",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 18,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Pump 2 run status",
+   "name": "ps1_pump2_run_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 19,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Pump 2 run command",
+   "name": "ps1_pump2_run_command",
+   "rw": "R/W",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 20,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Station power",
+   "name": "ps1_power",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 21,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Station energy",
+   "name": "ps1_energy",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 22,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Discharge pressure",
+   "name": "ps1_discharge_pressure",
+   "rw": "R",
+   "units": "bar",
+   "asset": ""
+  },
+  {
+   "id": 23,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Pump 1 fault",
+   "name": "ps1_pump1_fault_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 24,
+   "system": "SCADA",
+   "equipment": "Pump Station PS1",
+   "description": "Pump 2 fault",
+   "name": "ps1_pump2_fault_status",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 25,
+   "system": "AMR",
+   "equipment": "Customer meters DMA-01",
+   "description": "Billed consumption (daily)",
+   "name": "dma01_customer_cumulative_water_volume",
+   "rw": "R",
+   "units": "m3",
+   "asset": ""
+  },
+  {
+   "id": 26,
+   "system": "AMR",
+   "equipment": "Customer meters DMA-02",
+   "description": "Billed consumption (daily)",
+   "name": "dma02_customer_cumulative_water_volume",
+   "rw": "R",
+   "units": "m3",
+   "asset": ""
+  }
+ ]
+}

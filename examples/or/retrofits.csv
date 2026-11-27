@@ -1,0 +1,7 @@
+project,cost,annual_saving,co2_saving_t,group
+Chiller 2 replacement,1200000,118000,190,chiller
+Chiller 2 VSD retrofit,420000,61000,98,chiller
+LED upgrade L1-L20,380000,74000,118,
+AHU EC fans (6 units),510000,69000,110,
+BMS schedule recommissioning,60000,38000,61,
+Solar PV 250 kWp,900000,96000,154,

@@ -1,0 +1,20 @@
+{
+  "days": 3,
+  "technicians": [
+    {"id": "T1", "skills": ["hvac"], "hours_per_day": 8},
+    {"id": "T2", "skills": ["hvac", "electrical"], "hours_per_day": 8},
+    {"id": "T3", "skills": ["plumbing"], "hours_per_day": 8}
+  ],
+  "tasks": [
+    {"id": "WO-101", "asset": "CH-02", "skill": "hvac", "hours": 6, "score": 95, "due_day": 0},
+    {"id": "WO-102", "asset": "AHU-03", "skill": "hvac", "hours": 3, "score": 88, "due_day": 0},
+    {"id": "WO-103", "asset": "AHU-07", "skill": "hvac", "hours": 2, "score": 60, "due_day": 1},
+    {"id": "WO-104", "asset": "MDB-2", "skill": "electrical", "hours": 4, "score": 70, "due_day": 1},
+    {"id": "WO-105", "asset": "P-3", "skill": "plumbing", "hours": 5, "score": 82, "due_day": 0},
+    {"id": "WO-106", "asset": "FCU-L12", "skill": "hvac", "hours": 1.5, "score": 40, "due_day": 2},
+    {"id": "WO-107", "asset": "CT-1", "skill": "hvac", "hours": 7, "score": 55, "due_day": 2},
+    {"id": "WO-108", "asset": "Riser-2", "skill": "plumbing", "hours": 4, "score": 78, "due_day": 1},
+    {"id": "WO-109", "asset": "AHU-11", "skill": "hvac", "hours": 4, "score": 50, "due_day": 2},
+    {"id": "WO-110", "asset": "LV-Panel-4", "skill": "electrical", "hours": 3, "score": 45, "due_day": 2}
+  ]
+}

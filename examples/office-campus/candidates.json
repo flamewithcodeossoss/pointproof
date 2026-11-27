@@ -1,0 +1,1243 @@
+[
+ {
+  "usecase": "energy-baseline",
+  "domain": "buildings",
+  "title": "Weather-normalised energy baseline",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Energy meter consumption",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     30,
+     35,
+     36,
+     37,
+     40
+    ]
+   },
+   {
+    "key": "outdoor_temp",
+    "label": "Outdoor air temperature (or a weather API)",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     29
+    ]
+   },
+   {
+    "key": "occupancy",
+    "label": "Occupancy count",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     39
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "meter-balance-drift",
+  "domain": "buildings",
+  "title": "Sub-meter reconciliation against the main meter",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Meter consumption (parent and sub-meters)",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     30,
+     35,
+     36,
+     37,
+     40
+    ]
+   },
+   {
+    "key": "comms",
+    "label": "Meter online or connectivity status",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     34
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "portfolio-benchmarking",
+  "domain": "buildings",
+  "title": "Energy use intensity benchmark across buildings",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Building energy consumption",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     30,
+     35,
+     36,
+     37
+    ]
+   },
+   {
+    "key": "area",
+    "label": "Floor area (point or master data)",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "fault-energy-cost",
+  "domain": "buildings",
+  "title": "Wasted energy and cost per active fault",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "fault",
+    "label": "Equipment fault or alarm status",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     11,
+     17,
+     27,
+     41
+    ]
+   },
+   {
+    "key": "power",
+    "label": "Power (kW) on the asset or its meter",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     9,
+     25,
+     31,
+     32,
+     37
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "ecm-out-of-hours",
+  "domain": "buildings",
+  "title": "Equipment running outside its schedule",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "run",
+    "label": "Run status",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     7,
+     16,
+     21,
+     28
+    ]
+   },
+   {
+    "key": "schedule",
+    "label": "Schedule status",
+    "required": true,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     12
+    ]
+   },
+   {
+    "key": "power",
+    "label": "Power or fan speed (to size the saving)",
+    "required": false,
+    "writable": false,
+    "count": 6,
+    "point_ids": [
+     8,
+     9,
+     25,
+     31,
+     32,
+     37
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "ecm-unoccupied-conditioning",
+  "domain": "buildings",
+  "title": "Conditioning or lighting unoccupied zones",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "occupancy",
+    "label": "Zone occupancy",
+    "required": true,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     15,
+     20
+    ]
+   },
+   {
+    "key": "run",
+    "label": "Unit or lighting run status",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     7,
+     16,
+     21,
+     28,
+     38
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "ecm-excess-fresh-air",
+  "domain": "buildings",
+  "title": "Excess fresh air",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "damper",
+    "label": "Outdoor or fresh air damper position",
+    "required": true,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     5
+    ]
+   },
+   {
+    "key": "co2",
+    "label": "CO2 level",
+    "required": true,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     4
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "chw-setpoint-reset",
+  "domain": "buildings",
+  "title": "Chilled-water supply setpoint reset (rule-based)",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "chws_sp",
+    "label": "Chilled-water supply setpoint (writable)",
+    "required": true,
+    "writable": true,
+    "count": 1,
+    "point_ids": [
+     24
+    ],
+    "writable_unknown_ids": []
+   },
+   {
+    "key": "valve",
+    "label": "AHU or FCU cooling valve position",
+    "required": true,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     6
+    ]
+   },
+   {
+    "key": "zone_temp",
+    "label": "Zone temperature",
+    "required": false,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     13,
+     18
+    ]
+   },
+   {
+    "key": "chws",
+    "label": "Chilled-water supply temperature",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     22
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "zone-setback",
+  "domain": "buildings",
+  "title": "Unoccupied zone setpoint setback",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "occupancy",
+    "label": "Zone occupancy",
+    "required": true,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     15,
+     20
+    ]
+   },
+   {
+    "key": "zone_sp",
+    "label": "Zone temperature setpoint (writable)",
+    "required": true,
+    "writable": true,
+    "count": 2,
+    "point_ids": [
+     14,
+     19
+    ],
+    "writable_unknown_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "alarm-kpis",
+  "domain": "buildings",
+  "title": "Alarm system performance (ISA-18.2 KPIs)",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "alarms",
+    "label": "Alarm or fault points",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     11,
+     17,
+     27,
+     41
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "maintenance-prioritisation",
+  "domain": "buildings",
+  "title": "Maintenance priority score from faults and run hours",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "fault",
+    "label": "Fault status",
+    "required": true,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     11,
+     17,
+     27
+    ]
+   },
+   {
+    "key": "hours",
+    "label": "Run hours",
+    "required": false,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     10,
+     26
+    ]
+   },
+   {
+    "key": "wo",
+    "label": "CMMS work-order fields",
+    "required": false,
+    "writable": false,
+    "count": 6,
+    "point_ids": [
+     44,
+     45,
+     46,
+     47,
+     48,
+     49
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "work-order-prioritisation",
+  "domain": "buildings",
+  "title": "Open work orders ranked by criticality and SLA",
+  "method": [
+   "rules",
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "wo",
+    "label": "Work-order status and dates",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     44,
+     45,
+     46,
+     49
+    ]
+   },
+   {
+    "key": "sla",
+    "label": "SLA fields",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     48
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "carbon-trajectory",
+  "domain": "buildings",
+  "title": "Emissions tracking against a reduction target",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Energy consumption",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     30,
+     35,
+     36,
+     37
+    ]
+   },
+   {
+    "key": "factor",
+    "label": "Carbon intensity factor (point or configured)",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "retrofit-roi",
+  "domain": "buildings",
+  "title": "Retrofit payback from the measured baseline",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Asset or meter energy",
+    "required": true,
+    "writable": false,
+    "count": 8,
+    "point_ids": [
+     9,
+     25,
+     30,
+     31,
+     32,
+     35,
+     36,
+     37
+    ]
+   },
+   {
+    "key": "cost",
+    "label": "Maintenance labour and materials",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "copilot-nlq",
+  "domain": "buildings",
+  "title": "Natural-language copilot over the points",
+  "method": [
+   "genai"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "any",
+    "label": "Any time-series point",
+    "required": true,
+    "writable": false,
+    "count": 32,
+    "point_ids": [
+     1,
+     2,
+     3,
+     7,
+     9,
+     11,
+     13,
+     14,
+     15,
+     16,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     27,
+     28,
+     29,
+     30,
+     31,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     42,
+     43,
+     45
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "incident-timeline",
+  "domain": "buildings",
+  "title": "Incident summary drafted from alarms and work orders",
+  "method": [
+   "genai"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "alarms",
+    "label": "Alarm or fault points",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     11,
+     17,
+     27,
+     41
+    ]
+   },
+   {
+    "key": "wo",
+    "label": "Work-order fields",
+    "required": false,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     44,
+     45,
+     46
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "equipment-degradation",
+  "domain": "buildings",
+  "title": "Efficiency drift against commissioning (kW/TR, delta-T)",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "power",
+    "label": "Chiller or unit power",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     9,
+     25,
+     31,
+     32,
+     37
+    ]
+   },
+   {
+    "key": "temps",
+    "label": "Supply and return temperatures",
+    "required": true,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     1,
+     22,
+     23
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "demand-forecast",
+  "domain": "buildings",
+  "title": "Day-ahead building load forecast",
+  "method": [
+   "ml"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Meter consumption history",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     30,
+     35,
+     36,
+     37
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "remaining-useful-life",
+  "domain": "buildings",
+  "title": "Failure prediction (remaining useful life)",
+  "method": [
+   "ml"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "hours",
+    "label": "Run hours",
+    "required": true,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     10,
+     26
+    ]
+   },
+   {
+    "key": "fault",
+    "label": "Fault history",
+    "required": true,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     11,
+     17,
+     27
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "occupancy-forecast",
+  "domain": "buildings",
+  "title": "Occupancy forecast by space",
+  "method": [
+   "ml"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "occupancy",
+    "label": "People counting",
+    "required": true,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     39
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "maintenance-scheduling",
+  "domain": "buildings",
+  "title": "Maintenance scheduling to technicians and days",
+  "method": [
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/schedule_maintenance.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "fault",
+    "label": "Fault or alarm status (to create tasks)",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     11,
+     17,
+     27,
+     41
+    ]
+   },
+   {
+    "key": "hours",
+    "label": "Run hours (service intervals)",
+    "required": false,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     10,
+     26
+    ]
+   },
+   {
+    "key": "wo",
+    "label": "CMMS work-order fields",
+    "required": false,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     44,
+     45,
+     46
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "work-order-assignment",
+  "domain": "buildings",
+  "title": "Work-order assignment to teams",
+  "method": [
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/schedule_maintenance.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "wo",
+    "label": "Work-order status and dates",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     44,
+     45,
+     46,
+     49
+    ]
+   },
+   {
+    "key": "team",
+    "label": "Assigned team or contractor",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     47
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "retrofit-portfolio",
+  "domain": "buildings",
+  "title": "Retrofit selection within a budget",
+  "method": [
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/budget_select.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Energy use of the assets concerned",
+    "required": true,
+    "writable": false,
+    "count": 8,
+    "point_ids": [
+     9,
+     25,
+     30,
+     31,
+     32,
+     35,
+     36,
+     37
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "consumables-reorder",
+  "domain": "buildings",
+  "title": "Consumables reorder points and order quantities",
+  "method": [
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/reorder.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "level",
+    "label": "Consumable level",
+    "required": true,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     42,
+     43
+    ]
+   },
+   {
+    "key": "occupancy",
+    "label": "Occupancy (to scale usage)",
+    "required": false,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     15,
+     20,
+     39
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "waste-collection-routing",
+  "domain": "buildings",
+  "title": "Bin collection planning and routing",
+  "method": [
+   "statistics",
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/route_collection.py",
+  "status": "blocked",
+  "missing_required": [
+   "Bin fill level"
+  ],
+  "slots": [
+   {
+    "key": "fill",
+    "label": "Bin fill level",
+    "required": true,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "cleaning-rostering",
+  "domain": "buildings",
+  "title": "Cleaning rota driven by footfall",
+  "method": [
+   "statistics",
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/schedule_maintenance.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "occupancy",
+    "label": "Zone occupancy or footfall",
+    "required": true,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     15,
+     20,
+     39
+    ]
+   },
+   {
+    "key": "requests",
+    "label": "Cleaning requests or events",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "sensor-data-quality",
+  "domain": "general",
+  "title": "Sensor and data-quality checks",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "measurements",
+    "label": "Analog measurements",
+    "required": true,
+    "writable": false,
+    "count": 27,
+    "point_ids": [
+     1,
+     3,
+     4,
+     5,
+     6,
+     8,
+     9,
+     10,
+     13,
+     15,
+     18,
+     20,
+     22,
+     23,
+     25,
+     26,
+     29,
+     30,
+     31,
+     32,
+     33,
+     35,
+     36,
+     39,
+     40,
+     42,
+     43
+    ]
+   },
+   {
+    "key": "comms",
+    "label": "Device online or communication status",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     34
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "short-cycling",
+  "domain": "general",
+  "title": "Equipment short-cycling",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "run",
+    "label": "Run status of any motor, pump, compressor, fan or unit",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     7,
+     16,
+     21,
+     28
+    ]
+   },
+   {
+    "key": "power",
+    "label": "Power (to size the extra wear and energy)",
+    "required": false,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     9,
+     25,
+     31,
+     32
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "peak-demand-alerts",
+  "domain": "utilities",
+  "title": "Peak demand alerts",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "demand",
+    "label": "Active power demand",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     9,
+     25,
+     31,
+     32,
+     37
+    ]
+   },
+   {
+    "key": "peak",
+    "label": "Peak demand register",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     32
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "power-quality",
+  "domain": "utilities",
+  "title": "Power factor and voltage monitoring",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "pf",
+    "label": "Power factor",
+    "required": true,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     33
+    ]
+   },
+   {
+    "key": "voltage",
+    "label": "Voltage",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "solar-performance-ratio",
+  "domain": "utilities",
+  "title": "Solar performance ratio",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "blocked",
+  "missing_required": [
+   "Solar energy or power"
+  ],
+  "slots": [
+   {
+    "key": "generation",
+    "label": "Solar energy or power",
+    "required": true,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   },
+   {
+    "key": "irradiance",
+    "label": "Irradiance",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "load-shifting-tariff",
+  "domain": "utilities",
+  "title": "Load shifting and battery dispatch against tariff",
+  "method": [
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/budget_select.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "demand",
+    "label": "Site demand",
+    "required": true,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     31,
+     32
+    ]
+   },
+   {
+    "key": "battery",
+    "label": "Battery state of charge",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "energy-load-forecast",
+  "domain": "utilities",
+  "title": "Short-term load forecast",
+  "method": [
+   "ml"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "energy",
+    "label": "Energy or demand history",
+    "required": true,
+    "writable": false,
+    "count": 8,
+    "point_ids": [
+     9,
+     25,
+     30,
+     31,
+     32,
+     35,
+     36,
+     37
+    ]
+   }
+  ]
+ }
+]

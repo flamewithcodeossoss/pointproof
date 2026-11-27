@@ -1,0 +1,28 @@
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix bldg: <urn:example-building#> .
+
+bldg:AHU-1 a brick:AHU ; brick:hasPoint bldg:AHU-1.SAT, bldg:AHU-1.SAT-SP, bldg:AHU-1.RAT, bldg:AHU-1.CHW-VLV, bldg:AHU-1.RUN, bldg:AHU-1.OA-DMPR, bldg:AHU-1.CO2 .
+bldg:AHU-1.SAT a brick:Supply_Air_Temperature_Sensor ; rdfs:label "AHU-1 supply air temperature" ; brick:hasUnit unit:DEG_C .
+bldg:AHU-1.SAT-SP a brick:Supply_Air_Temperature_Setpoint ; rdfs:label "AHU-1 supply air temperature setpoint" ; brick:hasUnit unit:DEG_C .
+bldg:AHU-1.RAT a brick:Return_Air_Temperature_Sensor ; rdfs:label "AHU-1 return air temperature" .
+bldg:AHU-1.CHW-VLV a brick:Cooling_Valve_Command ; rdfs:label "AHU-1 cooling valve" .
+bldg:AHU-1.RUN a brick:Run_Status ; rdfs:label "AHU-1 run status" .
+bldg:AHU-1.OA-DMPR a brick:Outside_Air_Damper_Position_Command ; rdfs:label "AHU-1 outside air damper" .
+bldg:AHU-1.CO2 a brick:Return_Air_CO2_Sensor ; rdfs:label "AHU-1 return air CO2" .
+
+bldg:CH-1 a brick:Chiller ; brick:hasPoint bldg:CH-1.CHWS, bldg:CH-1.CHWS-SP, bldg:CH-1.KW, bldg:CH-1.FLT .
+bldg:CH-1.CHWS a brick:Chilled_Water_Supply_Temperature_Sensor ; rdfs:label "CH-1 chilled water supply temperature" .
+bldg:CH-1.CHWS-SP a brick:Chilled_Water_Supply_Temperature_Setpoint ; rdfs:label "CH-1 chilled water supply setpoint" .
+bldg:CH-1.KW a brick:Electrical_Power_Sensor ; rdfs:label "CH-1 power" ; brick:hasUnit unit:KiloW .
+bldg:CH-1.FLT a brick:Fault_Status ; rdfs:label "CH-1 fault" .
+
+bldg:Main-Meter a brick:Electrical_Meter ; brick:hasPoint bldg:Main-Meter.kWh, bldg:Main-Meter.kW .
+bldg:Main-Meter.kWh a brick:Active_Energy_Sensor ; rdfs:label "Main meter energy" ; brick:hasUnit unit:KiloW-HR .
+bldg:Main-Meter.kW a brick:Active_Power_Sensor ; rdfs:label "Main meter demand" .
+
+bldg:Zone-3 a brick:HVAC_Zone ; brick:hasPoint bldg:Zone-3.ZT, bldg:Zone-3.ZT-SP, bldg:Zone-3.OCC .
+bldg:Zone-3.ZT a brick:Zone_Air_Temperature_Sensor ; rdfs:label "Zone 3 temperature" .
+bldg:Zone-3.ZT-SP a brick:Zone_Air_Temperature_Setpoint ; rdfs:label "Zone 3 setpoint" .
+bldg:Zone-3.OCC a brick:Occupancy_Status ; rdfs:label "Zone 3 occupancy" .

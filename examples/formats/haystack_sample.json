@@ -1,0 +1,13 @@
+{"meta": {"ver": "3.0"},
+ "cols": [{"name": "id"}, {"name": "dis"}],
+ "rows": [
+  {"id": "r:@site1 Demo Site", "dis": "s:Demo Site", "site": "m:"},
+  {"id": "r:@ahu2 AHU-2", "dis": "s:AHU-2", "equip": "m:", "ahu": "m:", "siteRef": "r:@site1"},
+  {"id": "r:@p1", "dis": "s:AHU-2 Discharge Air Temp", "point": "m:", "his": "m:", "discharge": "m:", "air": "m:", "temp": "m:", "sensor": "m:", "unit": "s:°C", "equipRef": "r:@ahu2 AHU-2"},
+  {"id": "r:@p2", "dis": "s:AHU-2 Discharge Air Temp SP", "point": "m:", "writable": "m:", "discharge": "m:", "air": "m:", "temp": "m:", "sp": "m:", "unit": "s:°C", "equipRef": "r:@ahu2 AHU-2"},
+  {"id": "r:@p3", "dis": "s:AHU-2 Fan Run", "point": "m:", "fan": "m:", "run": "m:", "sensor": "m:", "equipRef": "r:@ahu2 AHU-2"},
+  {"id": "r:@p4", "dis": "s:AHU-2 Cooling Valve", "point": "m:", "writable": "m:", "chilled": "m:", "water": "m:", "valve": "m:", "cmd": "m:", "unit": "s:%", "equipRef": "r:@ahu2 AHU-2"},
+  {"id": "r:@m1 Main Meter", "dis": "s:Main Meter", "equip": "m:", "meter": "m:", "elec": "m:"},
+  {"id": "r:@p5", "dis": "s:Main Meter kW", "point": "m:", "his": "m:", "elec": "m:", "power": "m:", "sensor": "m:", "unit": "s:kW", "equipRef": "r:@m1 Main Meter"},
+  {"id": "r:@p6", "dis": "s:Main Meter kWh", "point": "m:", "his": "m:", "elec": "m:", "energy": "m:", "sensor": "m:", "unit": "s:kWh", "equipRef": "r:@m1 Main Meter"}
+ ]}

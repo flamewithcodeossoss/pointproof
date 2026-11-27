@@ -1,56 +1,62 @@
 ---
 name: pointproof
-description: Prove which AI use cases a building, plant or industrial site can really deliver from its points list (BMS, SCADA, PLC I/O, energy, IoT, CMMS). For each requirement it picks the simplest method (rules, statistics, ML or GenAI), lists the exact points it needs, flags missing data, and builds a validated Excel report. Use when given a points list, I/O list or tag list plus AI requirements, use cases, a tender or an RFP to scope.
+description: Prove which AI use cases a site can really deliver from its points list, for buildings, water networks, utilities, industrial plants and data centres. Reads any points source (CSV/Excel/PDF lists, historian or PI tag exports, BACnet EDE, Brick, Project Haystack, OPC UA NodeSet). For each requirement it picks the simplest method (rules, statistics, optimisation, ML, plus GenAI), lists the exact points it needs, flags missing data, validates every point, and builds an interactive studio and an Excel report. Use when given a points, I/O or tag list plus AI requirements, use cases, a tender or an RFP to scope.
 ---
 
 # PointProof
 
-Turn "we need AI for X" into a decision you can defend point by point: applicable or out of scope, the simplest method, the exact points from the client's own list, the logic, and the output. Every point in the report is checked against the points list, so nothing is invented.
+Turn "we need AI for X" into a decision you can defend point by point: applicable or out of scope, the simplest method, the exact points from the client's own list, the logic and the output. Every point is checked against the points list, so nothing is invented.
 
 ## Inputs
 
-1. **Points list**: CSV/TSV (any delimiter, UTF-8 or Windows-1252), XLSX or a PDF table, with a point name, tag or description column. Any naming style works (DBO, Brick, Haystack, vendor tags, plain-language descriptions, any language), from any domain (buildings, plants, utilities, process).
+1. **Points source**, any of: CSV/TSV (any delimiter, UTF-8 or Windows-1252), XLSX or PDF table; historian / PI / SCADA tag export; BACnet EDE (`.csv`); Brick model (`.ttl`); Project Haystack JSON (grid or Hayson); OPC UA NodeSet2 (`.xml`). Any naming style and language works.
 2. **Requirements**: the AI use cases to assess (a list, a table, or tender text). Give each a short `ref`.
-3. **Policy** (ask if not given): the highest method the team will deliver — `rules`, `statistics` or `ml`. A team that does not deliver ML uses `statistics`.
+3. **Policy**: the highest method the team delivers: `rules`, `statistics`, `optimisation` or `ml`.
+4. Optional: **domain** (buildings, water, utilities, industrial, datacentres) and **capacity** (how many items the team can take).
 
-If the points list or the requirements are missing, ask for them before starting.
+If anything is missing, follow `references/interview.md`: one round of at most four questions, sensible defaults, then work.
 
 ## Workflow
 
-Scripts are in `scripts/` next to this file; run them with Python 3.9+ (`pip install openpyxl pyyaml`, plus `pdfplumber` for PDF input).
+Scripts are in `scripts/` next to this file. Python 3.9+: `pip install openpyxl pyyaml` (add `rdflib` for Brick, `pdfplumber` for PDF, `ortools` for the optimisation examples).
 
-1. **Parse the points list**
-   `python scripts/parse_points.py <points file> --out points.json`
-   Check the detected columns and any WARN lines in the output. If a column was missed or the wrong one was taken, rerun with `--map name="<Header>"` (fields: id, system, equipment, description, name, rw, units, asset). For a workbook it picks the sheet with the best header; use `--sheet` to choose another. If ids repeat (e.g. numbering restarts per panel), points get ids like `12-2`; map a unique column to `id` if there is one.
+1. **Parse the points**
+   `python scripts/parse_points.py <file> --out points.json` (format is detected; force it with `--format table|brick|haystack|ede|opcua`).
+   Check the summary and any WARN lines. For tables, if a column was missed or the wrong one was taken, rerun with `--map name="<Header>"` (fields: id, system, equipment, description, name, rw, units, asset). For a workbook it picks the sheet with the best header; use `--sheet` to choose another. If ids repeat (numbering restarts per panel), points get ids like `12-2`; map a unique column to `id` if there is one.
 
 2. **Match the library**
-   `python scripts/match_usecases.py points.json --out candidates.json`
-   This shows which generic use cases in `references/usecases.yaml` the list can support (ready / partial / blocked) and which points fill each slot. Matching ignores naming style and also uses units (a `kWh` point fills an energy slot even with a cryptic tag). The library leans to buildings and energy; for other domains add a pack with `--library pack.yaml --add-builtin`, or reason from first principles in step 3. A slot marked `writable_unverified` means the list has no read/write data: list it in `missing` as "confirm the point is writable".
+   `python scripts/match_usecases.py points.json --domain <domains> --out candidates.json`
+   Lists which library use cases (`references/usecases/*.yaml`) the points support: ready, partial or blocked, and the points that fill each slot. Names are normalised first, so `AHU01.SATSP`, `Supply Air Temp SP` and a Brick or Haystack name all match, and units count too (a `kWh` point fills an energy slot even with a cryptic tag). Without `--domain`, all domains are matched; `general` holds checks that apply to any site. For a domain the library lacks, add a pack with `--library pack.yaml --add-builtin`, or reason from first principles in step 3.
 
-3. **Assess each requirement** and write `assessment.json` following `references/assessment_schema.md`:
-   - Map the requirement to a library use case when one fits; otherwise reason from first principles.
-   - Choose the **lowest rung that meets it** (`references/method_ladder.md`): rules, then statistics, then ml; add genai when language is involved.
+3. **Assess each requirement** and write `assessment.json` per `references/assessment_schema.md`:
+   - Map it to a library use case when one fits; otherwise reason from first principles.
+   - Choose the **lowest rung that meets it** (`references/method_ladder.md`): rules, statistics, optimisation, ml; add genai when language is involved.
    - Mark it `out_of_scope` when it needs a method above the policy, points that are not in the list and cannot be substituted, or a third-party platform. Out-of-scope items need only `ref`, `title`, `verdict`; add a one-line `reason` (method above policy, which points are missing, third-party platform).
-   - For applicable items, reference points **only** by `id` and `name` exactly as they appear in `points.json`. Prefer the points from `candidates.json`.
-   - Write the logic as short steps; label every threshold as an example to confirm.
-   - Give one example output with illustrative values, and the output's shape (tags, queue item, report).
-   - Put anything needed but absent from the list in `missing` (e.g. fan power, floor area, emission factor).
+   - Reference points **only** by `id` and `name` exactly as in `points.json`, preferring those in `candidates.json`. A slot marked `writable_unverified` (its points have no R/W data, listed in `writable_unknown_ids`) goes in `missing` as "confirm the point is writable".
+   - Write the logic as short steps; label every threshold as an example to confirm. Give one example output with illustrative values.
+   - For optimisation items, name the model (assignment, routing, knapsack, inventory) and its constraints. `scripts/optimise/` has a runnable reference model for each; run one on example data to produce a realistic example output.
+   - Set `group` (e.g. Energy, Maintenance, Network losses) so coverage can be shown per group.
+   - Put anything needed but absent in `missing` (e.g. fan power, floor area, tariff, technician skills).
 
-4. **Validate** — must pass before reporting:
+4. **Validate**: must pass before anything is shown as final.
    `python scripts/validate.py assessment.json points.json --max-method <policy>`
    Fix every error (unknown id, wrong name, method above policy) and rerun.
 
-5. **Build the report**
-   `python scripts/build_report.py assessment.json points.json --out PointProof_report.xlsx`
-   One sheet: applicable items with points, logic and example output; out of scope; missing data; points used per system; optional architecture.
+5. **Review with the user**: show the shortlist table and counts (see `references/interview.md`), ask what to move in or out, apply, revalidate.
+
+6. **Build the outputs** the user wants:
+   - Studio: `python scripts/build_studio.py --assessment assessment.json --points points.json --out studio.html`
+     One HTML file. The user toggles items in or out, changes the policy and capacity, edits points and logic, adds library use cases, imports new points files, and sees coverage, the method ladder, an architecture diagram and gaps update live. It exports `assessment.json` (feed it back to step 4), Excel, CSV, a PDF report, or the studio with changes. Publish or send it as the user prefers.
+   - Excel: `python scripts/build_report.py assessment.json points.json --out PointProof_report.xlsx` (one sheet).
+   If the user edited in the studio, take the exported `assessment.json`, validate it again, then rebuild.
 
 ## Rules
 
 - Never cite a point that is not in `points.json`. If the right point is missing, say so in `missing` or move the item out of scope.
-- Call statistics "statistics", not "AI model". Use ML only when a trained, retrained model is genuinely needed.
-- Recommendations that change a setpoint or create a work order always go through operator approval; say so in the logic.
-- Keep client documents out of anything you publish.
+- Call statistics "statistics" and solvers "optimisation", never "AI model". Use ML only when a trained, retrained model is genuinely needed.
+- Recommendations that change a setpoint, a schedule or create a work order go through operator approval; say so in the logic.
+- Keep client documents and client names out of anything published as an example.
 
 ## Reply to the user
 
-After the report is built: the counts (applicable / out of scope), the two or three most important gaps from `missing`, and the report file. Do not repeat the whole table in chat.
+After the outputs are built: the counts (applicable / out of scope, coverage %), the two or three most important gaps, and the files. Do not repeat the whole table in chat.

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+  <NamespaceUris><Uri>urn:example:plant</Uri></NamespaceUris>
+  <UAObject NodeId="ns=1;s=Chiller1" BrowseName="1:Chiller1"><DisplayName>Chiller 1</DisplayName></UAObject>
+  <UAVariable NodeId="ns=1;s=Chiller1.CHWS" BrowseName="1:ChilledWaterSupplyTemperature" ParentNodeId="ns=1;s=Chiller1" DataType="Double" AccessLevel="1">
+    <DisplayName>Chilled water supply temperature</DisplayName><Description>Leaving chilled water temperature</Description></UAVariable>
+  <UAVariable NodeId="ns=1;s=Chiller1.CHWS.EU" BrowseName="EngineeringUnits" ParentNodeId="ns=1;s=Chiller1.CHWS" DataType="EUInformation">
+    <DisplayName>EngineeringUnits</DisplayName><Value><DisplayName>°C</DisplayName></Value></UAVariable>
+  <UAVariable NodeId="ns=1;s=Chiller1.CHWSSP" BrowseName="1:ChilledWaterSupplyTemperatureSetpoint" ParentNodeId="ns=1;s=Chiller1" DataType="Double" AccessLevel="3">
+    <DisplayName>Chilled water supply setpoint</DisplayName></UAVariable>
+  <UAVariable NodeId="ns=1;s=Chiller1.Power" BrowseName="1:PowerSensor" ParentNodeId="ns=1;s=Chiller1" DataType="Double" AccessLevel="1">
+    <DisplayName>Power</DisplayName></UAVariable>
+  <UAObject NodeId="ns=1;s=Pump3" BrowseName="1:Pump3"><DisplayName>Pump 3</DisplayName></UAObject>
+  <UAVariable NodeId="ns=1;s=Pump3.Run" BrowseName="1:RunStatus" ParentNodeId="ns=1;s=Pump3" DataType="Boolean" AccessLevel="1"><DisplayName>Run status</DisplayName></UAVariable>
+  <UAVariable NodeId="ns=1;s=Pump3.Hours" BrowseName="1:RunHours" ParentNodeId="ns=1;s=Pump3" DataType="Double" AccessLevel="1"><DisplayName>Run hours</DisplayName></UAVariable>
+  <UAVariable NodeId="ns=1;s=Pump3.Fault" BrowseName="1:FaultStatus" ParentNodeId="ns=1;s=Pump3" DataType="Boolean" AccessLevel="1"><DisplayName>Fault</DisplayName></UAVariable>
+</UANodeSet>

@@ -1,0 +1,12 @@
+#Engineering-Data-Exchange - B.A.C.n.e.t EDE 2.3
+#PROJECT_NAME;Demo
+#VERSION_OF_REFERENCEFILE;1
+# keyname;device obj.-instance;object-name;object-type;object-instance;description;present-value-default;min-present-value;max-present-value;settable;supports COV;hi-limit;low-limit;state-text-reference;unit-code;vendor-specific-address
+AHU3_SAT;1001;AHU3_SAT;0;1;Supply air temperature;;;;N;Y;;;;62;
+AHU3_SATSP;1001;AHU3_SATSP;2;1;Supply air temperature setpoint;14;10;20;Y;Y;;;;62;
+AHU3_CHWV;1001;AHU3_CHWV;1;1;Chilled water valve command;0;0;100;Y;Y;;;;98;
+AHU3_RUN;1001;AHU3_RUN;3;1;Supply fan run status;;;;N;Y;;;1;;
+AHU3_SCHED;1001;AHU3_SCHED;5;1;Occupancy schedule status;;;;Y;Y;;;2;;
+MTR1_KWH;2001;MTR1_KWH;0;10;Main meter energy;;;;N;Y;;;;19;
+MTR1_KW;2001;MTR1_KW;0;11;Main meter power demand;;;;N;Y;;;;48;
+Z12_CO2;3001;Z12_CO2;0;20;Zone 12 CO2;;;;N;Y;;;;96;

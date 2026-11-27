@@ -7,17 +7,17 @@
 ### *Every AI claim, proven point by point.*
 
 [![CI](https://github.com/flamewithcodeossoss/pointproof/actions/workflows/test.yml/badge.svg)](https://github.com/flamewithcodeossoss/pointproof/actions/workflows/test.yml)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/flamewithcodeossoss/pointproof)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/flamewithcodeossoss/pointproof)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/Agent%20Skill-Claude%20%7C%20Codex%20%7C%20Cursor-purple.svg)](skills/pointproof)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/flamewithcodeossoss/pointproof/pulls)
 
-**PointProof** is an open-source agent skill and specification engine for building, OT, and industrial AI scoping.
+**PointProof** is an open-source agent skill and toolkit for scoping AI on real sites: buildings, water networks, utilities, industrial plants and data centres.
 
-Given a site's raw telemetry points list (BMS, SCADA, IoT, CMMS) and a tender RFP requirement list, PointProof deterministically validates what can actually be delivered, enforces the simplest defensible method, binds exact physical points without hallucinations, and compiles an executive-ready Excel proof matrix.
+Give it a site's points list in almost any format (BMS or SCADA schedules, historian tag exports, BACnet EDE, Brick, Project Haystack, OPC UA) and a list of AI requirements from a tender or RFP. PointProof decides what can really be delivered, picks the simplest defensible method, binds every requirement to exact points from the client's own list, and refuses to let an invented point through. You review the result in an interactive studio and hand over an Excel proof sheet.
 
-[Why PointProof?](#why-pointproof) • [How It Works](#how-it-works) • [Quickstart](#quickstart) • [The Method Ladder](#the-method-ladder) • [Use-Case Library](#built-in-use-case-library) • [CLI Reference](#cli-reference) • [Walkthrough](#example-walkthrough-harbor-tower) • [Contributing](#contributing)
+[Why PointProof?](#why-pointproof) • [How It Works](#how-it-works) • [Quickstart](#quickstart) • [Studio](#pointproof-studio) • [Method Ladder](#the-method-ladder) • [Use-Case Library](#built-in-use-case-library) • [CLI Reference](#cli-reference) • [Walkthrough](#example-walkthrough-northgate-office-campus) • [Contributing](#contributing)
 
 </div>
 
@@ -26,7 +26,7 @@ Given a site's raw telemetry points list (BMS, SCADA, IoT, CMMS) and a tender RF
 ## Table of Contents
 
 - [Why PointProof?](#why-pointproof)
-  - [The AI Scoping Trap in Smart Buildings](#the-ai-scoping-trap-in-smart-buildings)
+  - [The AI Scoping Trap](#the-ai-scoping-trap)
   - [The PointProof Guarantee](#the-pointproof-guarantee)
 - [How It Works](#how-it-works)
   - [Pipeline Architecture](#pipeline-architecture)
@@ -35,17 +35,13 @@ Given a site's raw telemetry points list (BMS, SCADA, IoT, CMMS) and a tender RF
   - [1. For Claude Code](#1-for-claude-code)
   - [2. For Universal Coding Agents (Codex, Cursor, OpenCode)](#2-for-universal-coding-agents-codex-cursor-opencode)
   - [3. For Python & CLI Users](#3-for-python--cli-users)
-- [Example Walkthrough: Harbor Tower](#example-walkthrough-harbor-tower)
-  - [The Challenge](#the-challenge)
-  - [The Execution](#the-execution)
-  - [The Result](#the-result)
+- [Supported Data Sources](#supported-data-sources)
+- [PointProof Studio](#pointproof-studio)
+- [Example Walkthrough: Northgate Office Campus](#example-walkthrough-northgate-office-campus)
 - [The Report Structure](#the-report-structure)
 - [Built-in Use-Case Library](#built-in-use-case-library)
+- [The Optimisation Rung and Learning OR](#the-optimisation-rung-and-learning-or)
 - [CLI Reference](#cli-reference)
-  - [`parse_points.py`](#parse_pointspy)
-  - [`match_usecases.py`](#match_usecasespy)
-  - [`validate.py`](#validatepy)
-  - [`build_report.py`](#build_reportpy)
 - [Assessment Schema Specification](#assessment-schema-specification)
 - [Development & Testing](#development--testing)
 - [Roadmap](#roadmap)
@@ -56,67 +52,68 @@ Given a site's raw telemetry points list (BMS, SCADA, IoT, CMMS) and a tender RF
 
 ## Why PointProof?
 
-### The AI Scoping Trap in Smart Buildings
+### The AI Scoping Trap
 
-In smart facility tenders, commercial real estate RFPs, and industrial automation bids, client requirements for "Artificial Intelligence" are routinely vague and over-scoped:
+In smart facility tenders, utility RFPs and industrial automation bids, "Artificial Intelligence" requirements are routinely vague and over-scoped:
 
-> *"The solution shall provide AI-driven continuous predictive optimization of chiller plants, fault detection with root-cause identification, and GenAI automated work orders."*
+> *"The solution shall provide AI-driven predictive optimisation of the chiller plant, fault detection with root-cause identification, and automated work orders."*
 
-When responding to these tenders, delivery teams face two major risks:
+Delivery teams responding to these tenders face two risks:
 
-1. **The Over-Promise Trap**: Promising complex neural networks, deep reinforcement learning, or unconstrained GenAI copilots when the underlying physics are already solved by deterministic engineering rules or classical statistical regressions (e.g., ASHRAE Guideline 14 baselines, ISA-18.2 alarm management, setpoint trim-and-respond).
-2. **The Telemetry Disconnect**: Bidding on use cases that require specific sensors (e.g., kW sub-meters, outdoor air temperature, static pressure, differential temperature, or writable control points) without checking if those points physically exist in the building's BMS or SCADA schedule. When delivery begins, teams discover critical sensors are missing, writable points are locked as read-only, or naming conventions are inconsistent.
+1. **The Over-Promise Trap**: promising neural networks or unconstrained GenAI copilots when the problem is already solved by engineering rules, classical statistics or a scheduling solver (ASHRAE Guideline 14 baselines, ISA-18.2 alarm management, trim-and-respond setpoint resets, technician rostering).
+2. **The Telemetry Disconnect**: bidding on use cases that need specific points (kW sub-meters, outdoor air temperature, writable setpoints, work-order fields) without checking that those points exist in the site's schedule. When delivery starts, sensors are missing, setpoints are read-only and names are inconsistent.
 
 ### The PointProof Guarantee
 
-| Traditional AI Bidding | PointProof Spec-Driven Scoping |
+| Traditional AI Bidding | PointProof Scoping |
 |:---|:---|
-| **Vague Promises**: Generic marketing slides claiming "state-of-the-art ML". | **Deterministic Grounding**: Every algorithm cites exact, numbered point IDs from the building schedule. |
-| **Hallucinated Sensors**: Algorithms assume perfect data that does not exist on site. | **Validator Zero-Tolerance**: If an agent or engineer references a point ID not in the file, execution halts. |
-| **Black-Box Overkill**: Deep models proposed where a degree-day regression is superior. | **Occam's Razor (The Method Ladder)**: Rules before Statistics; Statistics before Machine Learning. |
-| **Costly Scope Creep**: Missing hardware discovered months into contract delivery. | **Upfront Gap Analysis**: Hardware and master data deficits are flagged directly in Section C of the report. |
-| **Manual Spreadsheet Juggling**: Hours spent cross-referencing I/O schedules by hand. | **Automated Ingestion**: Ingests CSV, XLSX, or PDF tables and produces an A3 executive workbook in seconds. |
+| **Vague Promises**: generic slides claiming "state-of-the-art ML". | **Grounded**: every requirement cites exact, numbered point ids from the site's own list. |
+| **Hallucinated Sensors**: algorithms assume data that does not exist on site. | **Zero tolerance**: if an agent or engineer references a point that is not in the list, validation fails. |
+| **Black-Box Overkill**: deep models proposed where a degree-day regression or a solver does the job. | **The Method Ladder**: rules before statistics, statistics before optimisation, optimisation before ML. |
+| **Costly Scope Creep**: missing hardware discovered months into delivery. | **Upfront Gap Analysis**: missing points and master data are listed in the report and the studio. |
+| **Manual Spreadsheet Juggling**: hours cross-referencing I/O schedules by hand. | **Any source in seconds**: CSV, Excel, PDF, tag exports, EDE, Brick, Haystack and OPC UA are read and normalised automatically. |
 
 ---
 
 ## How It Works
 
-PointProof operates as both an **Autonomous Agent Skill** (for Claude Code, Cursor, Codex, and other LLM assistants) and a **Deterministic CLI Toolkit**.
+PointProof works as an **agent skill** (Claude Code, Cursor, Codex and other assistants that read Agent Skills) and as a **command-line toolkit** you can run yourself. When information is missing, the agent asks at most four questions (domain, data source, highest method the team delivers, team capacity), proposes a shortlist and lets you move items in or out.
 
 ### Pipeline Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Inputs["1. Site Telemetry & Requirements"]
-        PointsFile["Points List<br/>(CSV / XLSX / PDF)"]
-        ReqsFile["AI Requirements / RFP<br/>(Tender Text / Table)"]
-        Policy["Policy Setting<br/>(--max-method rules|statistics|ml)"]
+    subgraph Inputs["1. Site data and requirements"]
+        PointsFile["Points source<br/>(CSV / XLSX / PDF, tag export,<br/>BACnet EDE, Brick, Haystack, OPC UA)"]
+        ReqsFile["AI requirements / RFP<br/>(tender text or table)"]
+        Policy["Policy<br/>(--max-method rules|statistics|optimisation|ml)"]
     end
 
-    subgraph Phase1["2. Telemetry Normalization"]
+    subgraph Phase1["2. Normalisation"]
         Parser["scripts/parse_points.py"]
-        PointsJSON["points.json<br/>(Normalized IDs, R/W, systems)"]
+        PointsJSON["points.json<br/>(ids, systems, R/W, units)"]
     end
 
-    subgraph Phase2["3. Capability Matching"]
-        UsecaseLib[("references/usecases.yaml<br/>(20 standard use cases)")]
+    subgraph Phase2["3. Capability matching"]
+        UsecaseLib[("references/usecases/<br/>(51 use cases, 6 domains)")]
         Matcher["scripts/match_usecases.py"]
         CandidatesJSON["candidates.json<br/>(ready / partial / blocked)"]
     end
 
-    subgraph Phase3["4. Agent Scoping & Synthesis"]
-        Agent["AI Agent or Engineer<br/>(Applies Method Ladder & First Principles)"]
-        AssessmentJSON["assessment.json<br/>(Verdict, logic, outputs, points)"]
+    subgraph Phase3["4. Agent scoping"]
+        Agent["AI agent or engineer<br/>(method ladder and first principles)"]
+        AssessmentJSON["assessment.json<br/>(verdict, logic, outputs, points)"]
     end
 
-    subgraph Phase4["5. Verification Gate"]
-        Validator{"scripts/validate.py<br/>(Zero invented points? Policy compliance?)"}
-        Errors["Validation Failures<br/>(Halt & auto-remedy)"]
+    subgraph Phase4["5. Verification gate"]
+        Validator{"scripts/validate.py<br/>(no invented points? within policy?)"}
+        Errors["Validation failures<br/>(fix and rerun)"]
     end
 
-    subgraph Phase5["6. Executive Deliverable"]
+    subgraph Phase5["6. Review and deliverables"]
+        Studio["scripts/build_studio.py<br/>studio.html (review, edit, export)"]
         ReportBuilder["scripts/build_report.py"]
-        ExcelReport["PointProof_report.xlsx<br/>(Formatted A3 Landscape Proof Sheet)"]
+        ExcelReport["PointProof_report.xlsx<br/>(one-sheet A3 proof)"]
     end
 
     PointsFile --> Parser --> PointsJSON
@@ -133,7 +130,9 @@ flowchart TD
     Policy --> Validator
 
     Validator -- "Errors found" --> Errors --> Agent
+    Validator -- "Verified" --> Studio
     Validator -- "Verified" --> ReportBuilder
+    Studio -- "exported assessment.json" --> Validator
     PointsJSON --> ReportBuilder
     ReportBuilder --> ExcelReport
 
@@ -142,7 +141,7 @@ flowchart TD
     classDef warning fill:#F57C00,stroke:#E65100,stroke-width:2px,color:#fff;
     classDef file fill:#ECEFF1,stroke:#90A4AE,stroke-width:1px,color:#263238;
 
-    class Parser,Matcher,Validator,ReportBuilder primary;
+    class Parser,Matcher,Validator,ReportBuilder,Studio primary;
     class ExcelReport success;
     class Errors warning;
     class PointsFile,ReqsFile,Policy,PointsJSON,CandidatesJSON,AssessmentJSON,UsecaseLib file;
@@ -152,43 +151,49 @@ flowchart TD
 
 ### The Method Ladder
 
-PointProof enforces **Occam's razor** in algorithmic design: *always choose the lowest rung that satisfies the objective*.
+PointProof applies **Occam's razor** to every requirement: *choose the lowest rung that meets it*.
 
 ```mermaid
 graph BT
-    R1["Rung 1: Rules<br/>Fixed comparisons, arithmetic, threshold bounds, operational schedules"]
-    R2["Rung 2: Statistics<br/>Regression baselines, percentiles, medians, CUSUM drift, control charts"]
-    R3["Rung 3: Machine Learning (ML)<br/>Trained models requiring feature engineering, retraining, and drift monitoring"]
-    GenAI["Layer +: Generative AI (GenAI)<br/>Natural language explanation, incident syntheses, executive briefs"]
+    R1["Rung 1: Rules<br/>Fixed comparisons, arithmetic, thresholds, schedules"]
+    R2["Rung 2: Statistics<br/>Regression baselines, medians, CUSUM drift, control charts"]
+    R3["Rung 3: Optimisation<br/>Decisions under constraints: schedules, routes, assignments, budgets"]
+    R4["Rung 4: Machine Learning (ML)<br/>Trained models with retraining and drift monitoring"]
+    GenAI["Layer +: Generative AI (GenAI)<br/>Plain-language questions, explanations, summaries"]
 
     R1 --> R2
     R2 --> R3
+    R3 --> R4
     R1 -.-> GenAI
     R2 -.-> GenAI
     R3 -.-> GenAI
+    R4 -.-> GenAI
 
     classDef rung1 fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px,color:#1B5E20;
     classDef rung2 fill:#E1F5FE,stroke:#03A9F4,stroke-width:2px,color:#01579B;
-    classDef rung3 fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100;
+    classDef rung3 fill:#EDE7F6,stroke:#7E57C2,stroke-width:2px,color:#311B92;
+    classDef rung4 fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#E65100;
     classDef genai fill:#F3E5F5,stroke:#AB47BC,stroke-width:2px,color:#4A148C;
 
     class R1 rung1;
     class R2 rung2;
     class R3 rung3;
+    class R4 rung4;
     class GenAI genai;
 ```
 
 #### Decision Matrix
 
-| Rung | Method | Use When | Industrial / Building Examples |
+| Rung | Method | Use When | Examples |
 |:---:|:---|:---|:---|
-| **1** | `rules` | A physical relation, arithmetic formula, or Boolean logic answers the requirement. | Equipment running out-of-hours; cooling setpoint trim-and-respond; fault energy cost calculations; economizer damper lockouts. |
-| **2** | `statistics` | It requires fitting a line, calculating a percentile/median, or monitoring a running sum without model retraining pipelines. | Weather-normalized energy baselines (IPMVP Option C, ASHRAE Guideline 14); CUSUM meter drift; ISA-18.2 alarm KPIs; portfolio EUI benchmarking. |
-| **3** | `ml` | Accuracy depends on learning high-dimensional non-linear patterns that require ongoing training pipelines, cross-validation, and drift tracking. | 24–72 hour day-ahead peak electrical demand forecasting; chiller compressor remaining useful life (RUL); learned thermal inertia predictive models. |
-| **+** | `genai` | Human language is involved in input or output: querying systems in plain English, explaining a complex anomaly, or generating incident timelines. | Operator Copilot natural-language querying; automated shift turnover briefs; contextualized work-order summaries. |
+| **1** | `rules` | A physical relation, arithmetic or Boolean logic answers the requirement. | Equipment running out of hours; chilled-water trim-and-respond; wasted energy per fault; DMA water balance. |
+| **2** | `statistics` | It needs a fitted line, a percentile or median, or a running sum, with no training pipeline. | Weather-normalised baselines (IPMVP Option C, ASHRAE Guideline 14); CUSUM meter drift; ISA-18.2 alarm KPIs; minimum night flow. |
+| **3** | `optimisation` | The answer is a decision among many combinations under limits (people, hours, trucks, budget, capacity). | Technician scheduling; work-order assignment; bin collection routing; retrofit selection within a budget; pump scheduling against tariff. |
+| **4** | `ml` | Accuracy depends on learning non-linear patterns that need training, validation and drift tracking. | Day-ahead load forecasting; failure prediction (remaining useful life); vibration-based maintenance. |
+| **+** | `genai` | Human language is involved in the input or the output. | Plain-language questions over the points; shift and incident summaries; work-order drafts. |
 
 > [!NOTE]
-> `genai` is not a replacement for numerical computation; it sits on top of whichever underlying rung computes the numbers. Calling a regression baseline an "AI Model" is prohibited under PointProof verification standards.
+> `genai` never replaces the numbers; it sits on top of whichever rung computes them. Call a regression baseline "statistics" and a solver "optimisation", never "an AI model".
 
 ---
 
@@ -196,7 +201,7 @@ graph BT
 
 ### 1. For Claude Code
 
-PointProof is packaged as an official Claude Code plugin and skill.
+PointProof is packaged as a Claude Code plugin and skill.
 
 ```bash
 # Add the marketplace and install
@@ -204,28 +209,28 @@ PointProof is packaged as an official Claude Code plugin and skill.
 /plugin install pointproof@pointproof
 ```
 
-Once installed, invoke PointProof inside any conversation:
+Then, in any conversation:
 
 ```text
-Use pointproof on points.xlsx and tender_requirements.csv.
-Our team delivers rules and statistics, not ML.
+Use pointproof on the attached EDE export and the tender's AI section.
+We deliver rules, statistics and optimisation; no ML. Capacity: 8 items.
 ```
 
 ### 2. For Universal Coding Agents (Codex, Cursor, OpenCode)
 
-PointProof supports the universal Agent Skills standard:
+PointProof follows the Agent Skills standard:
 
 ```bash
 npx skills add flamewithcodeossoss/pointproof --skill pointproof
 ```
 
-Alternatively, copy `skills/pointproof/` directly into your agent's skill directory:
+Or copy `skills/pointproof/` into your agent's skills folder:
 - Claude Code: `~/.claude/skills/pointproof`
 - Cursor / OpenCode / Antigravity: `.agents/skills/pointproof` or `.gemini/skills/pointproof`
 
 ### 3. For Python & CLI Users
 
-Install standard dependencies (Python 3.9+):
+Install the dependencies (Python 3.9+):
 
 ```bash
 git clone https://github.com/flamewithcodeossoss/pointproof.git
@@ -233,110 +238,136 @@ cd pointproof
 pip install -r requirements.txt
 ```
 
-Run the pipeline manually:
+Run the pipeline yourself:
 
 ```bash
-# Set scripts directory
 S=skills/pointproof/scripts
+E=examples/office-campus
 
-# 1. Parse raw points list (CSV, XLSX, or PDF)
-python $S/parse_points.py examples/harbor-tower/points.csv --out points.json
+# 1. Parse the points source (format is detected)
+python $S/parse_points.py $E/points.csv --out points.json
 
-# 2. Check candidate use-case matches against the library
-python $S/match_usecases.py points.json --out candidates.json
+# 2. Match the use-case library
+python $S/match_usecases.py points.json --domain buildings,utilities,general --out candidates.json
 
-# 3. Validate your scoping assessment against physical points
-python $S/validate.py examples/harbor-tower/assessment.json points.json --max-method statistics
+# 3. Validate the assessment against the points
+python $S/validate.py $E/assessment.json points.json
 
-# 4. Generate the formatted executive Excel proof sheet
-python $S/build_report.py examples/harbor-tower/assessment.json points.json --out PointProof_report.xlsx
+# 4. Open the interactive studio
+python $S/build_studio.py --assessment $E/assessment.json --points points.json --out studio.html
+
+# 5. Build the Excel proof sheet
+python $S/build_report.py $E/assessment.json points.json --out PointProof_report.xlsx
 ```
+
+No install needed to try the studio: open `examples/office-campus/studio.html` or `examples/water-network/studio.html` in a browser.
 
 ---
 
-## Example Walkthrough: Harbor Tower
+## Supported Data Sources
 
-The repository includes a complete reference dataset based on **Harbor Tower**, a fictional 35-storey mixed-use commercial asset.
+| Source | Files | How it is read |
+|:---|:---|:---|
+| Points schedules and I/O lists | `.csv` `.tsv` `.txt` `.xlsx` `.xlsm` `.pdf` | Delimiter and encoding (UTF-8, Windows-1252) detected; header found by synonyms, also inside longer headers (`Tag Name (DBO)`); best workbook sheet picked automatically |
+| Historian / PI / SCADA tag exports | `.csv` | Tag, description and units columns; the asset comes from the tag prefix (`AHU01.SAT` → `AHU01`) |
+| BACnet EDE | `.csv` (semicolon) | Object types and unit codes decoded; AO, BO, MO and settable values are writable |
+| Brick | `.ttl` `.rdf` `.jsonld` | Points and the equipment they belong to (needs `rdflib`) |
+| Project Haystack | `.json` (grid v3 or Hayson) | Marker tags become the point name; `writable`, `sp` and `cmd` are writable |
+| OPC UA NodeSet2 | `.xml` | Variables, their parent object, access level and engineering units |
+
+Names are normalised before matching: accents dropped, camelCase split, abbreviations expanded (`SAT`, `CHWST`, `SP`, `kW`…). `AHU01.SATSP`, `Supply Air Temp SP` and `supplyAirTemperatureSetpoint` all read *supply air temperature setpoint*. When a system column is missing, the system is inferred from the equipment and tag.
+
+---
+
+## PointProof Studio
+
+A single HTML file, built from an assessment and a points list, that runs in any browser with nothing to install.
+
+![PointProof Studio](docs/studio.png)
+
+| Tab | What you do there |
+|:---|:---|
+| **Scope** | Switch each requirement in or out; filter by group, method or issues; open one to edit its method, points (proved live against the list), logic, outputs and out-of-scope reason |
+| **Suggest** | Library use cases matched against your points (ready / partial / blocked); add one as a draft requirement |
+| **Architecture** | A diagram generated from the applicable items: sources with points used, engines per method, approval flow |
+| **Points** | Every point, which requirement uses it, and points used per system |
+| **Gaps** | Proof errors, missing data and capacity overflow |
+
+The side panel sets the delivery policy (rungs above it are flagged) and a team capacity. Drop a new points file onto the page (CSV, tag export, EDE, Haystack JSON, OPC UA NodeSet or `points.json`) to re-check everything against it. Export `assessment.json` (feed it back to `validate.py`), Excel, CSV, a PDF report, or the studio itself with your changes. Edits stay in your browser until you export.
+
+![Generated architecture](docs/studio-architecture.png)
+
+---
+
+## Example Walkthrough: Northgate Office Campus
+
+The repository includes **Northgate Office Campus**, a fictional office building with a vendor-style tag list. A second example, **Riverside Water Network** (`examples/water-network/`), shows a SCADA list for a water utility.
 
 ### The Challenge
 
-- **Points Schedule**: 59 physical points spanning BMS, Energy Sub-meters, IAQ, Lighting, and CMMS.
-- **Tender Scope**: 12 diverse AI & advanced analytics requirements from an RFP.
-- **Delivery Mandate**: The engineering team delivers deterministic rules and statistical baselines, but has a policy against deploying unverified Machine Learning pipelines (`--max-method statistics`).
+- **Points list**: 49 tags (`AHU1.SATSP`, `CH1.CHWSTSP`, `MTR.MAIN.KWH`…) across HVAC, energy meters, lighting, people counting, water, washrooms and the CMMS.
+- **Tender scope**: 13 AI and analytics requirements.
+- **Delivery policy**: the team delivers rules, statistics and optimisation, but not ML (`max_method: optimisation`).
 
 ### The Execution
 
-1. **Telemetry Ingestion**:
+1. **Parse**:
    ```bash
-   python skills/pointproof/scripts/parse_points.py examples/harbor-tower/points.csv --out points.json
+   python skills/pointproof/scripts/parse_points.py examples/office-campus/points.csv --out points.json
    ```
-   *Output*: Ingests 59 points across 7 subsystems (31 BMS, 9 CMMS, 7 Energy, 4 IAQ, 4 Lighting, 2 Water, 2 People Counting). Identifies 9 writable (R/W) control setpoints.
+   *Output*: 49 points across 7 systems (29 HVAC, 8 Energy, 6 CMMS, 2 Water, 2 Washrooms, 1 Lighting, 1 Occupancy); 9 writable.
 
-2. **Matching Against 20 Standard Use Cases**:
+2. **Match**:
    ```bash
-   python skills/pointproof/scripts/match_usecases.py points.json --out candidates.json
+   python skills/pointproof/scripts/match_usecases.py points.json --domain buildings,utilities,general --out candidates.json
    ```
-   *Output*: Matches requirements against `references/usecases.yaml`. Determines that baseline regressions, out-of-hours detection, and setpoint resets have all required telemetry (`ready`), while deep demand forecasting is flagged as ML.
+   *Output*: 33 use cases checked; 31 ready, 2 blocked (no bin fill sensors, no solar meter).
 
-3. **Verification Gate**:
+3. **Validate**:
    ```bash
-   python skills/pointproof/scripts/validate.py examples/harbor-tower/assessment.json points.json --max-method statistics
+   python skills/pointproof/scripts/validate.py examples/office-campus/assessment.json points.json
    ```
-   *Output*:
    ```text
-   12 items: 9 applicable, 3 out of scope; 39 distinct points referenced; policy max method: statistics
+   13 items: 10 applicable, 3 out of scope; 37 distinct points referenced; policy max method: optimisation
    PASSED: every referenced point exists in the points list
    ```
 
-4. **Deliverable Generation**:
+4. **Review and deliver**: open the studio, adjust, export; then build the Excel sheet:
    ```bash
-   python skills/pointproof/scripts/build_report.py examples/harbor-tower/assessment.json points.json --out PointProof_report.xlsx
+   python skills/pointproof/scripts/build_report.py examples/office-campus/assessment.json points.json --out PointProof_report.xlsx
    ```
 
 ### The Result
 
-An executive-ready, audit-grade proof workbook:
-
-![PointProof Executive Report](docs/report.png)
+![PointProof report](docs/report.png)
 
 ---
 
 ## The Report Structure
 
-`PointProof_report.xlsx` is compiled on a single, print-ready, high-density landscape A3 worksheet divided into five cohesive sections:
+`PointProof_report.xlsx` is one print-ready landscape A3 sheet in five sections:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  PointProof Executive Report: Harbor Tower — AI use cases proven against points list   │
-│  Summary: 9 Applicable  |  3 Out of Scope  |  12 Total Requirements                     │
+│  Northgate Office Campus (fictional demo) — AI use cases proven against the points list│
+│  Applicable 10  |  Out of scope 3  |  Total requirements 13                            │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  SECTION A. APPLICABLE REQUIREMENTS                                                    │
-│  [Ref] [Title] [Method & Why] [Input Points] [Other Inputs] [Logic] [Output] [Runs]    │
-│  • R1: Energy baseline (STATISTICS) -> Points: #41 Active Energy, #7 Outdoor Temp      │
-│  • R3: Fault energy cost (RULES)    -> Points: #17 Chilled Water Temp, #21 Flow Rate   │
-│  • R5: CHW reset (RULES)           -> Points: #22 CHW Supply Temp SP (R/W)             │
-│  ...                                                                                   │
+│  A. APPLICABLE                                                                         │
+│  [Ref] [Requirement] [Method and why] [Input points] [Other inputs] [Logic] [Output]    │
+│  [Example output] [Runs] [History needed]                                              │
+│  • REQ-02 Weather-corrected energy (STATISTICS) → #30 MTR.MAIN.KWH, #29 WS.OAT ...      │
+│  • REQ-04 Chilled-water reset (RULES) → #24 CH1.CHWSTSP (R/W), #6 AHU1.CLGVLV ...       │
+│  • REQ-07 Maintenance scheduling (OPTIMISATION) → #44 CMMS.WO.ID, #27 CH1.FLT ...       │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  SECTION B. OUT OF SCOPE                                                               │
-│  [Ref] [Requirement Title]                                                             │
-│  • R7: 24-72h demand forecast (Requires ML above organizational policy)                │
-│  • R8: Chiller Remaining Useful Life (Requires vibration sensors not in schedule)      │
+│  B. OUT OF SCOPE                    [Ref] [Requirement] [Reason]                       │
+│  • REQ-12 Next-day building load forecast — needs a trained ML model                   │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  SECTION C. MISSING POINTS AND DATA TO REQUEST                                         │
-│  [Ref] [Needed Telemetry / Master Data]                                                │
-│  • R1: Building gross floor area (master data)                                         │
-│  • R3: Electricity tariff schedule ($/kWh peak / off-peak)                            │
+│  C. MISSING POINTS AND DATA TO REQUEST                                                 │
+│  • REQ-07 Technician skills and shift rota (CMMS master data)                          │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  SECTION D. POINTS USED PER SYSTEM                                                     │
-│  [System]               [Points in List]     [Points Used]        [Share Used]         │
-│  • BMS                  31                   19                   61%                  │
-│  • Energy Sub-meters     7                    7                  100%                  │
-│  • Total                59                   39                   66%                  │
+│  D. POINTS USED PER SYSTEM          [System] [Points in list] [Used] [Share used]      │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│  SECTION E. ARCHITECTURE & GOVERNANCE                                                  │
-│  [Layer]                [What it does]       [Data & Points]      [Owner]              │
-│  • Edge Gateway         Modbus/BACnet poll   Real-time telemetry  BMS Vendor           │
-│  • Analytics Engine     FDD & Stat baselines Stored time-series   Data Engineering     │
+│  E. ARCHITECTURE                    [Layer] [What it does] [Data] [Owner]              │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -344,169 +375,191 @@ An executive-ready, audit-grade proof workbook:
 
 ## Built-in Use-Case Library
 
-PointProof ships with **22 building, energy and domain-agnostic use cases** in [`references/usecases.yaml`](skills/pointproof/references/usecases.yaml). Each entry defines required and optional telemetry slots, regex patterns for point names, optional units patterns, exclude rules, and citations to international engineering standards. Matching ignores naming style (`run_status`, `Run Status`, `RunStatus` and `RUN-STATUS` are the same) and folds accents, so the library works on DBO, Brick, Haystack, vendor tags or plain-language descriptions. For other domains, add your own pack with `--library` (see below):
+PointProof ships with **51 use cases in six domains**, one YAML file per domain in [`references/usecases/`](skills/pointproof/references/usecases/). Each defines required and optional point slots with name patterns, optional units patterns, equipment filters and exclude rules, plus the method, logic, output and data history it needs. Choose domains with `--domain`, or add your own pack with `--library`.
 
-| ID | Title | Method | Standard Reference | Telemetry Slots Required |
-|:---|:---|:---:|:---|:---|
-| `energy-baseline` | Weather-normalised energy baseline | `statistics` | IPMVP Option C, ASHRAE 14 | Energy meter kWh (`#`), Outdoor temp |
-| `meter-balance-drift` | Meter balance & drift detection | `statistics` | CUSUM Control Charts | Parent & child meters, connectivity |
-| `portfolio-benchmarking` | Portfolio EUI benchmarking | `statistics` | ISO 50001, ENERGY STAR | Energy meters, floor area, weather |
-| `fault-energy-cost` | Continuous fault energy cost | `rules` | ASHRAE Standard 90.1 | Power/thermal energy, setpoint drift |
-| `ecm-out-of-hours` | Equipment running outside schedule | `rules` | ASHRAE Standard 90.1 | Equipment run status, schedule |
-| `ecm-unoccupied-conditioning` | Conditioning unoccupied spaces | `rules` | EN 16798 | Occupancy count/state, zone temp SP |
-| `ecm-excess-fresh-air` | Economizer & fresh air optimization | `rules` | ASHRAE 62.1 | CO2 ppm, damper position, flow rate |
-| `chw-setpoint-reset` | Chilled water temp trim & respond | `rules` | ASHRAE Guideline 36 | CHW supply temp SP (writable), valve % |
-| `zone-setback` | Smart night/weekend setback | `rules` | ASHRAE 90.1 | Zone temp SP (writable), occupancy |
-| `alarm-kpis` | Alarm rate, flood & chattering KPIs | `statistics` | ISA-18.2, EEMUA 191 | Alarm trip states, priority tags |
-| `maintenance-prioritisation` | Rule-based maintenance triage | `rules` | ISO 55000 | Equipment run hours, filter DP |
-| `work-order-prioritisation` | CMMS backlog & SLA prioritization | `rules`+`statistics` | Best practice CMMS | Open tickets, SLA due date, priority |
-| `carbon-trajectory` | Scope 1 & 2 carbon tracking | `statistics` | GHG Protocol Scope 1/2 | Fuel & electricity kWh, grid factors |
-| `retrofit-roi` | Measurement & verification of ECMs | `rules` | IPMVP Option B / C | Post-retrofit baseline, utility cost |
-| `copilot-nlq` | Facility natural language queries | `genai` | Operator Copilot | Any validated points in schedule |
-| `incident-timeline` | Automated incident synthesis | `genai` | Incident Post-Mortem | System alarms, operator actions |
-| `equipment-degradation` | Heat exchanger fouling & degradation | `statistics` | Heat transfer fouling models | Entering/leaving temps, flow rate |
-| `demand-forecast` | 24–72 h day-ahead peak forecasting | `ml` | Deep learning / XGBoost | Multi-year historical load, weather API |
-| `remaining-useful-life` | Bearing & motor vibration RUL | `ml` | Predictive Maintenance (PdM) | High-frequency vibration, bearing temp |
-| `occupancy-forecast` | Building occupancy forecasting | `ml` | Space planning models | Historical turnstile / camera counts |
-| `sensor-data-quality` | Flatline, range, spike and gap checks (any domain) | `rules` | — | Any analog measurement, comms status |
-| `short-cycling` | Motor, pump, compressor or unit short-cycling (any domain) | `rules` | — | Run status, optional power |
+| Domain | ID | Title | Method |
+|:---|:---|:---|:---|
+| Buildings | `energy-baseline` | Weather-normalised energy baseline | `statistics` |
+| Buildings | `meter-balance-drift` | Sub-meter reconciliation against the main meter | `statistics` |
+| Buildings | `portfolio-benchmarking` | Energy use intensity benchmark across buildings | `statistics` |
+| Buildings | `fault-energy-cost` | Wasted energy and cost per active fault | `rules` |
+| Buildings | `ecm-out-of-hours` | Equipment running outside its schedule | `rules` |
+| Buildings | `ecm-unoccupied-conditioning` | Conditioning or lighting unoccupied zones | `rules` |
+| Buildings | `ecm-excess-fresh-air` | Excess fresh air | `rules` |
+| Buildings | `chw-setpoint-reset` | Chilled-water supply setpoint reset (rule-based) | `rules` |
+| Buildings | `zone-setback` | Unoccupied zone setpoint setback | `rules` |
+| Buildings | `alarm-kpis` | Alarm system performance (ISA-18.2 KPIs) | `statistics` |
+| Buildings | `maintenance-prioritisation` | Maintenance priority score from faults and run hours | `rules` |
+| Buildings | `work-order-prioritisation` | Open work orders ranked by criticality and SLA | `rules` + `statistics` |
+| Buildings | `carbon-trajectory` | Emissions tracking against a reduction target | `statistics` |
+| Buildings | `retrofit-roi` | Retrofit payback from the measured baseline | `rules` |
+| Buildings | `copilot-nlq` | Natural-language copilot over the points | `genai` |
+| Buildings | `incident-timeline` | Incident summary drafted from alarms and work orders | `genai` |
+| Buildings | `equipment-degradation` | Efficiency drift against commissioning (kW/TR, delta-T) | `statistics` |
+| Buildings | `demand-forecast` | Day-ahead building load forecast | `ml` |
+| Buildings | `remaining-useful-life` | Failure prediction (remaining useful life) | `ml` |
+| Buildings | `occupancy-forecast` | Occupancy forecast by space | `ml` |
+| Buildings | `maintenance-scheduling` | Maintenance scheduling to technicians and days | `optimisation` |
+| Buildings | `work-order-assignment` | Work-order assignment to teams | `optimisation` |
+| Buildings | `retrofit-portfolio` | Retrofit selection within a budget | `optimisation` |
+| Buildings | `consumables-reorder` | Consumables reorder points and order quantities | `optimisation` |
+| Buildings | `waste-collection-routing` | Bin collection planning and routing | `statistics` + `optimisation` |
+| Buildings | `cleaning-rostering` | Cleaning rota driven by footfall | `statistics` + `optimisation` |
+| Water networks | `dma-water-balance` | District metered area water balance (non-revenue water) | `rules` |
+| Water networks | `minimum-night-flow` | Leak detection from minimum night flow | `statistics` |
+| Water networks | `burst-detection` | Burst detection from flow and pressure | `statistics` |
+| Water networks | `tank-level-management` | Reservoir and tank level management | `rules` |
+| Water networks | `pump-scheduling-tariff` | Pump scheduling against tariff and tank limits | `optimisation` |
+| Water networks | `pressure-management` | Pressure management by zone | `rules` |
+| Water networks | `water-demand-forecast` | Water demand forecast | `ml` |
+| Utilities and energy | `peak-demand-alerts` | Peak demand alerts | `rules` |
+| Utilities and energy | `power-quality` | Power factor and voltage monitoring | `rules` |
+| Utilities and energy | `solar-performance-ratio` | Solar performance ratio | `statistics` |
+| Utilities and energy | `load-shifting-tariff` | Load shifting and battery dispatch against tariff | `optimisation` |
+| Utilities and energy | `energy-load-forecast` | Short-term load forecast | `ml` |
+| Industrial | `oee` | Overall equipment effectiveness (OEE) | `rules` |
+| Industrial | `spc-control-charts` | Statistical process control | `statistics` |
+| Industrial | `energy-per-unit` | Energy per unit produced | `statistics` |
+| Industrial | `compressed-air-leaks` | Compressed air leak detection | `statistics` |
+| Industrial | `production-scheduling` | Production scheduling | `optimisation` |
+| Industrial | `vibration-predictive-maintenance` | Vibration-based predictive maintenance | `ml` |
+| Data centres | `pue` | Power usage effectiveness (PUE) | `rules` |
+| Data centres | `rack-inlet-compliance` | Rack inlet temperature compliance | `rules` |
+| Data centres | `cooling-setpoint-raise` | Cooling setpoint raise recommendations | `rules` |
+| Data centres | `capacity-planning` | Power and cooling capacity headroom | `statistics` |
+| Data centres | `workload-cooling-placement` | Workload placement for power and cooling | `optimisation` |
+| General (any site) | `sensor-data-quality` | Sensor and data-quality checks | `rules` |
+| General (any site) | `short-cycling` | Equipment short-cycling | `rules` |
+
+---
+
+## The Optimisation Rung and Learning OR
+
+Optimisation use cases name their model, and [`scripts/optimise/`](skills/pointproof/scripts/optimise/) has a small, runnable OR-Tools reference model for each kind:
+
+| Script | Question | OR model |
+|:---|:---|:---|
+| `reorder.py` | When to reorder consumables, and how many? | Inventory (s, Q) policy, EOQ |
+| `budget_select.py` | Which retrofits to fund within a budget? | 0/1 knapsack (CP-SAT) |
+| `schedule_maintenance.py` | Who fixes what, and which day? | Assignment with capacity (CP-SAT) |
+| `route_collection.py` | Which bins are due, and in what order? | Capacitated vehicle routing (CVRP) |
+
+They run on fictional data in `examples/or/` and double as a hands-on course: see [docs/learn-or.md](docs/learn-or.md) for the concepts, exercises and where to study further.
 
 ---
 
 ## CLI Reference
 
-All scripts reside in [`skills/pointproof/scripts/`](skills/pointproof/scripts/) and execute on Python 3.9+ with zero complex native binary dependencies.
+All scripts live in [`skills/pointproof/scripts/`](skills/pointproof/scripts/) and run on Python 3.9+.
 
 ### `parse_points.py`
 
-Normalizes heterogeneous points schedules into a uniform schema (`points.json`).
+Normalises any points source into `points.json`.
 
 ```bash
-python parse_points.py POINTS_FILE [--sheet NAME] [--out points.json] [--map field=Header ...]
+python parse_points.py SOURCE [--format auto|table|brick|haystack|ede|opcua] [--sheet NAME] [--out points.json] [--map field=Header ...]
 ```
 
-- **Arguments**:
-  - `POINTS_FILE`: Path to a `.csv`, `.tsv`, `.txt`, `.xlsx`, `.xlsm`, or `.pdf` file. CSV delimiter (`,` `;` tab `|`) and encoding (UTF-8 or Windows-1252) are detected.
-  - `--sheet NAME`: Sheet name for multi-tab Excel workbooks (defaults to the sheet with the best header row, so cover and revision sheets are skipped).
-  - `--out PATH`: Destination path (defaults to `points.json`). Automatically creates parent folders.
-  - `--map field=Header`: Explicit column overrides (e.g. `--map name="BACnet Tag" equipment="Asset Class"`).
-- **Extracted Fields**: `id`, `system`, `equipment`, `description`, `name`, `rw` (Read/Write), `units`, `asset`.
-- **Header detection**: exact synonyms first, then a synonym as whole words inside a longer header (`Tag Name (DBO)`, `Units of Measure`). A single tag or description column is enough.
-- **`rw`** is normalised to `R`, `W`, `R/W` or empty (unknown) from values such as `Read/Write`, `RW`, `Input`/`Output`, or I/O types `AI` `AO` `BI` `BO` `DI` `DO` `AV` `BV`.
-- **Repeated ids** (e.g. numbering that restarts per panel) are kept with ids like `12-2` and a warning; exact duplicate rows are dropped.
-
----
+- `SOURCE`: any file from [Supported Data Sources](#supported-data-sources); the format is detected unless `--format` is given.
+- `--sheet NAME`: worksheet to read (default: the sheet with the best header row, so cover and revision sheets are skipped).
+- `--out PATH`: destination (default `points.json`); parent folders are created.
+- `--map field=Header`: column overrides for tables, e.g. `--map name="BACnet Tag" equipment="Asset Class"`. Unknown fields and missing headers are rejected.
+- **Fields**: `id`, `system`, `equipment`, `description`, `name`, `rw`, `units`, `asset`.
+- **`rw`** is normalised to `R`, `W`, `R/W` or empty (unknown) from values such as `Read/Write`, `RW`, `RO`, `Input`/`Output`, or I/O types `AI` `AO` `BI` `BO` `DI` `DO` `AV` `BV`.
+- **Repeated ids** (numbering that restarts per panel) are kept as `12-2` with a warning; exact duplicate rows are dropped.
 
 ### `match_usecases.py`
 
-Screens the site points list against the standard use-case library.
+Screens the points against the use-case library.
 
 ```bash
-python match_usecases.py points.json [--library pack.yaml ...] [--add-builtin] [--out candidates.json]
+python match_usecases.py points.json [--domain buildings,water,...] [--library DIR_OR_FILE ...] [--add-builtin] [--out candidates.json]
 ```
 
-- **Arguments**:
-  - `points.json`: Normalized points output from `parse_points.py`.
-  - `--library PATH`: Custom YAML library (defaults to `references/usecases.yaml`). Repeat it to combine packs; a later pack replaces a use case with the same id.
-  - `--add-builtin`: Load the built-in library first, then the `--library` packs.
-- **Writable slots**: when the points list has no read/write data at all, writable slots match on name only and are marked `writable_unverified`.
-  - `--out PATH`: Output candidate JSON (defaults to `candidates.json`).
-- **Match Statuses**:
-  - `ready`: All mandatory telemetry slots find at least one valid point.
-  - `partial`: At least one required slot is filled, but others remain unfilled.
-  - `blocked`: Zero mandatory slots can be satisfied by the points list.
-
----
+- `--domain`: limit to `buildings`, `water`, `utilities`, `industrial`, `datacentres`, `general` (default: all).
+- `--library`: a library folder or YAML pack; repeat to combine packs (a later pack replaces a use case with the same id). `--add-builtin` loads the built-in library first.
+- **Statuses**: `ready` (every required slot has a point), `partial` (some), `blocked` (none).
+- **Writable slots**: points with no read/write data are kept, listed in `writable_unknown_ids` and the slot is marked `writable_unverified`; confirm write access before promising a setpoint change.
 
 ### `validate.py`
 
-The core integrity barrier. Verifies that no point IDs or point names are hallucinated, and enforces algorithmic policy limits.
+The integrity gate: no invented points, no method above the policy.
 
 ```bash
-python validate.py assessment.json points.json [--max-method rules|statistics|ml]
+python validate.py assessment.json points.json [--max-method rules|statistics|optimisation|ml]
 ```
 
-- **Validation Rules (Exit Code 1 on Failure)**:
-  - Every point ID cited must exist in `points.json`.
-  - Every point name cited must strictly match the name in `points.json`.
-  - No applicable item may have empty points without an explicit `no_points_reason`.
-  - No method may exceed the specified `--max-method` ceiling.
-  - Every requirement must have a unique `ref` and a valid verdict (`applicable` or `out_of_scope`).
+Fails (exit code 1) when a cited point id is not in `points.json`, a cited name differs from the list, an applicable item has no points and no `no_points_reason`, a method is above the policy, a ref repeats, a verdict is unknown, or the policy itself is not a known rung.
 
----
+### `build_studio.py`
+
+Builds PointProof Studio as one self-contained HTML file.
+
+```bash
+python build_studio.py [--assessment assessment.json] [--points points.json] [--domain ...] [--out studio.html]
+```
+
+Both inputs are optional: with only points it opens on the Suggest tab; with neither, drop files onto the page.
 
 ### `build_report.py`
 
-Compiles the final audit-grade Excel deliverable.
+Builds the one-sheet Excel proof.
 
 ```bash
 python build_report.py assessment.json points.json [--out PointProof_report.xlsx]
 ```
 
-- **Arguments**:
-  - `assessment.json`: The agent or engineer's validated assessment file.
-  - `points.json`: The normalized points schedule.
-  - `--out PATH`: Output workbook destination (defaults to `PointProof_report.xlsx`).
-- **Safety**: Automatically runs `validate.py` before touching the workbook. If validation fails, report generation aborts immediately.
+It runs the validator first and stops if validation fails.
 
 ---
 
 ## Assessment Schema Specification
 
-When an agent or engineer scopes an RFP, they produce `assessment.json`. The schema is documented below:
+The agent (or the studio) writes `assessment.json`; the full field list is in [`references/assessment_schema.md`](skills/pointproof/references/assessment_schema.md).
 
 ```json
 {
-  "project": "Harbor Tower (Commercial Office Demo)",
-  "points_source": "harbor_tower_points.csv",
-  "policy": {
-    "max_method": "statistics"
-  },
+  "project": "Northgate Office Campus (fictional demo)",
+  "points_source": "points.csv",
+  "policy": {"max_method": "optimisation"},
+  "capacity": 10,
   "items": [
     {
-      "ref": "R1",
-      "title": "Weather-normalised energy baseline",
+      "ref": "REQ-02",
+      "title": "Weather-corrected monthly energy performance",
+      "group": "Energy",
       "verdict": "applicable",
       "usecase": "energy-baseline",
       "method": ["statistics"],
-      "why": "One regression equation per meter; no ML training required.",
+      "why": "A regression of daily energy on cooling degree days and occupancy; no ML training.",
       "points": [
-        {"id": 41, "name": "active_energy_import_sensor"},
-        {"id": 7, "name": "outdoor_air_temperature_sensor"}
+        {"id": 30, "name": "MTR.MAIN.KWH"},
+        {"id": 29, "name": "WS.OAT"},
+        {"id": 39, "name": "PC.ENT.CNT"}
       ],
-      "other_inputs": "Weather API (hourly OAT); building calendar.",
+      "other_inputs": "Building calendar.",
       "logic": [
-        "Aggregate daily cumulative kWh per main meter.",
-        "Calculate daily cooling degree days (base 18.3°C).",
-        "Fit linear model kWh = a + b * CDD on 12-month rolling window.",
-        "Compute daily deviation: (Actual - Expected) / Expected."
+        "Daily kWh from the main incomer; drop days when the meter was offline.",
+        "Cooling degree days from outside air temperature (base to confirm).",
+        "Fit kWh = a + b × CDD + c × people on 12 months; accept only if ASHRAE Guideline 14 limits are met.",
+        "Monthly: actual vs expected, in kWh and %."
       ],
-      "output": "Tags per meter: expected_kwh, deviation_pct; monthly CV(RMSE).",
-      "example": "Main meter, 21 Nov: actual 18,420 kWh; expected 16,950 kWh; deviation +8.7%.",
-      "runs": "Daily; refit monthly",
-      "history": "3 months minimum; 12 months recommended",
-      "missing": ["Gross floor area per tenant (master data)"]
+      "output": "Monthly table and tags: expected kWh, actual kWh, deviation %.",
+      "example": "October: actual 212,400 kWh; expected 198,900 kWh; +6.8%.",
+      "runs": "Daily; report monthly; refit quarterly",
+      "history": "12 months"
     },
     {
-      "ref": "R7",
-      "title": "24–72 h electrical peak demand forecast",
+      "ref": "REQ-12",
+      "title": "Next-day building load forecast",
+      "group": "Energy",
       "verdict": "out_of_scope",
-      "reason": "Needs a trained ML model; team policy is statistics."
+      "reason": "Needs a trained forecasting model (ML); the policy stops at optimisation."
     }
   ],
   "architecture": [
-    {
-      "layer": "Field Systems & BMS",
-      "does": "Direct digital control of chillers, AHUs, and lighting loops",
-      "data": "BACnet/IP and Modbus telemetry",
-      "owner": "BMS Controls Contractor"
-    },
-    {
-      "layer": "Analytics & Proof Engine",
-      "does": "Calculates baseline regressions, FDD rules, and daily deviations",
-      "data": "PointProof verified points feed",
-      "owner": "Energy Engineering Team"
-    }
+    {"layer": "Field systems", "does": "BMS, meters and CMMS as in the points list", "data": "All points", "owner": "Site owner"},
+    {"layer": "Analytics", "does": "Rules, statistics and optimisation jobs; GenAI for summaries", "data": "Read-only", "owner": "AI team"}
   ]
 }
 ```
@@ -515,66 +568,61 @@ When an agent or engineer scopes an RFP, they produce `assessment.json`. The sch
 
 ## Development & Testing
 
-PointProof adheres to strict quality and test-driven standards.
-
-### Running Unit Tests
-
 ```bash
-# Run pytest across the complete test suite
+pip install -r requirements.txt
 pytest -v
 ```
 
-The test suite validates:
-- Ingestion across standard and unusual CSV/Excel encodings.
-- Detection of repeated headers in multi-page tables.
-- Verification of slot matching regex patterns and exclusion rules.
-- Strict rejection of invented point IDs and altered point names.
-- Policy boundary enforcement across the Method Ladder.
-- Dynamic nested directory creation for report builds.
-- Excel formula integrity and cell formatting.
+The test suite covers:
+- Every supported source format, plus semicolon and Windows-1252 CSVs, non-ASCII names, tag-only lists, headers inside longer headers, workbook cover sheets and repeated ids.
+- Name normalisation, accent folding, word-boundary patterns and units-based matching.
+- Strict rejection of invented point ids, altered names, malformed entries and unknown policies.
+- Policy enforcement across the method ladder, including the optimisation rung.
+- The four OR-Tools models (budget, groups, capacity limits).
+- The report (out-of-scope reasons, nested output folders) and the studio build (data embedding and escaping).
 
-### Continuous Integration
-
-Every push and pull request is automatically tested across Python versions via GitHub Actions (`.github/workflows/test.yml`).
+Every push and pull request runs the suite on GitHub Actions (`.github/workflows/test.yml`).
 
 ---
 
 ## Roadmap
 
-- [ ] **Brick Schema & Project Haystack Ingestion**: Direct import of RDF/Turtle (`.ttl`) and Haystack Zinc/JSON models.
-- [ ] **Automated Rule-Pack Compilers**: Export verified `rules` items into runnable Python, SQL, or BACnet control scripts.
-- [ ] **Expanded Industrial Libraries**: Dedicated use-case packs for Water Treatment, Data Centers, and Cold-Chain Logistics.
-- [ ] **Multi-Lingual Executive Sheets**: Native localized reporting in Arabic, French, Spanish, and German.
-- [ ] **Live Telemetry Connectors**: BACnet/IP discovery and MQTT sparkplug ingestion directly into PointProof.
+- [x] Brick, Project Haystack, BACnet EDE and OPC UA ingestion
+- [x] Water, utilities, industrial and data-centre use-case packs
+- [x] Interactive studio
+- [ ] Export runnable rule packs (Python / SQL) for the applicable `rules` items
+- [ ] Haystack Zinc grids and Brick model validation
+- [ ] Localised report sheets (Arabic, French, Spanish, German)
+- [ ] Live connectors: BACnet/IP discovery and MQTT Sparkplug
 
 ---
 
 ## Contributing
 
-We welcome contributions from building automation engineers, energy analysts, and AI practitioners!
+Contributions from building automation engineers, energy and water analysts, controls specialists and AI practitioners are welcome.
 
 ### How to Add a New Use Case
 
-The most valuable contribution is expanding [`skills/pointproof/references/usecases.yaml`](skills/pointproof/references/usecases.yaml):
+The most valuable contribution is a new use case in the right file of [`skills/pointproof/references/usecases/`](skills/pointproof/references/usecases/):
 
-1. **Pick an established domain standard** (e.g. ASHRAE, ISO, ISA, CUSUM, IPMVP).
-2. **Define telemetry slots** with clear regex naming patterns.
-3. **Specify the lowest defensible rung** on the Method Ladder.
-4. **Ensure anonymity**: Never include client-specific or proprietary point tags.
-5. **Add a test case** in `tests/test_pointproof.py` to verify that your slot patterns match properly.
+1. **Pick an established method** (ASHRAE, ISA, IPMVP, IWA, a standard OR model).
+2. **Define point slots** with clear name patterns (and units patterns where they help).
+3. **Choose the lowest rung** on the method ladder that meets it.
+4. **Keep it anonymous**: no client-specific or proprietary point tags or data.
+5. **Add a test** in `tests/test_pointproof.py` showing your slot patterns match.
 
-Please review our [Contributing Guidelines](CONTRIBUTING.md) and adhere to the project's code of conduct.
+New readers go in `scripts/adapters.py`, with a small sample in `examples/formats/`. See the [Contributing Guidelines](CONTRIBUTING.md).
 
 ---
 
 ## License & Disclaimers
 
-- **License**: Released under the [MIT License](LICENSE).
-- **Demo Building**: The "Harbor Tower" dataset and associated points are entirely fictional and designed solely for demonstration and test verification.
-- **Standards Affiliation**: PointProof is an independent open-source project. Citations of international standards (ASHRAE, IPMVP, ISO, ISA, EEMUA) are provided for technical reference and methodology alignment only.
+- **License**: released under the [MIT License](LICENSE).
+- **Demo sites**: Northgate Office Campus and Riverside Water Network, and their points and requirements, are fictional, made for demonstration and tests.
+- **Standards**: PointProof is an independent open-source project. Standards (ASHRAE, IPMVP, ISO, ISA, EEMUA, IWA) are cited for method references only.
 
 ---
 
 <div align="center">
-<sub>Built with precision for the smart building & industrial AI engineering community.</sub>
+<sub>Built for the smart building, utility and industrial AI engineering community.</sub>
 </div>

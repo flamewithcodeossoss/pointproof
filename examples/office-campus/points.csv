@@ -1,0 +1,50 @@
+Tag,Description,System,Equipment,Access,Units
+AHU1.SAT,Supply air temperature,HVAC,AHU-1,RO,°C
+AHU1.SATSP,Supply air temperature setpoint,HVAC,AHU-1,RW,°C
+AHU1.RAT,Return air temperature,HVAC,AHU-1,RO,°C
+AHU1.RACO2,Return air CO2,HVAC,AHU-1,RO,ppm
+AHU1.OAD,Outdoor air damper position,HVAC,AHU-1,RW,%
+AHU1.CLGVLV,Cooling valve position,HVAC,AHU-1,RW,%
+AHU1.SF.STS,Supply fan run status,HVAC,AHU-1,RO,
+AHU1.SF.SPD,Supply fan speed,HVAC,AHU-1,RW,%
+AHU1.KW,Supply fan power,HVAC,AHU-1,RO,kW
+AHU1.HRS,Supply fan run hours,HVAC,AHU-1,RO,h
+AHU1.FLT,Dirty filter alarm,HVAC,AHU-1,RO,
+AHU1.SCHED,Time schedule,HVAC,AHU-1,RW,
+FCU301.ZNT,Zone air temperature,HVAC,FCU-301,RO,°C
+FCU301.ZNTSP,Zone air temperature setpoint,HVAC,FCU-301,RW,°C
+FCU301.OCC,Zone occupancy sensor,HVAC,FCU-301,RO,
+FCU301.STS,Fan coil run status,HVAC,FCU-301,RO,
+FCU301.ALM,Fan coil fault alarm,HVAC,FCU-301,RO,
+FCU302.ZNT,Zone air temperature,HVAC,FCU-302,RO,°C
+FCU302.ZNTSP,Zone air temperature setpoint,HVAC,FCU-302,RW,°C
+FCU302.OCC,Zone occupancy sensor,HVAC,FCU-302,RO,
+CH1.STS,Chiller run status,HVAC,Chiller 1,RO,
+CH1.CHWST,Chilled water supply temperature,HVAC,Chiller 1,RO,°C
+CH1.CHWRT,Chilled water return temperature,HVAC,Chiller 1,RO,°C
+CH1.CHWSTSP,Chilled water supply temperature setpoint,HVAC,Chiller 1,RW,°C
+CH1.KW,Chiller power,HVAC,Chiller 1,RO,kW
+CH1.HRS,Chiller run hours,HVAC,Chiller 1,RO,h
+CH1.FLT,Chiller fault alarm,HVAC,Chiller 1,RO,
+CHWP1.STS,Chilled water pump run status,HVAC,CHW pump 1,RO,
+WS.OAT,Outside air temperature,HVAC,Weather station,RO,°C
+MTR.MAIN.KWH,Main incomer energy,Energy,Main incomer,RO,kWh
+MTR.MAIN.KW,Main incomer demand,Energy,Main incomer,RO,kW
+MTR.MAIN.KWPK,Peak demand this month,Energy,Main incomer,RO,kW
+MTR.MAIN.PF,Power factor,Energy,Main incomer,RO,
+MTR.MAIN.ONL,Meter online status,Energy,Main incomer,RO,
+MTR.HVAC.KWH,HVAC sub-meter energy,Energy,HVAC board,RO,kWh
+MTR.LTG.KWH,Lighting sub-meter energy,Energy,Lighting board,RO,kWh
+MTR.SP.KWH,Small power sub-meter energy,Energy,Small power board,RO,kWh
+LTG.L3.STS,Lighting zone level 3 status,Lighting,Lighting panel L3,RW,
+PC.ENT.CNT,Entrance people count,Occupancy,People counter,RO,people
+WTR.MAIN.VOL,Cumulative water volume,Water,Water meter,RO,m³
+WTR.MAIN.LEAK,Leak alarm,Water,Water meter,RO,
+WC.G.SOAP,Soap dispenser level,Washrooms,Ground floor washroom,RO,%
+WC.G.TOWEL,Towel dispenser level,Washrooms,Ground floor washroom,RO,%
+CMMS.WO.ID,Work order number,CMMS,Work orders,RO,
+CMMS.WO.STATUS,Work order status,CMMS,Work orders,RO,
+CMMS.WO.PRIORITY,Work order priority,CMMS,Work orders,RO,
+CMMS.WO.ASSIGNED,Assigned technician,CMMS,Work orders,RO,
+CMMS.WO.SLADUE,SLA due date,CMMS,Work orders,RO,
+CMMS.WO.CLOSED,Completion date,CMMS,Work orders,RO,

@@ -1,0 +1,76 @@
+# PointProof use-case library: energy and electrical utilities (sites, campuses, microgrids)
+version: 2
+domain: utilities
+usecases:
+
+  - id: peak-demand-alerts
+    title: Peak demand alerts
+    method: [rules]
+    why: Rolling demand against the monthly peak and contracted limit.
+    slots:
+      - {key: demand, label: Active power demand, required: true, match: {name: [power_demand, active_power, demand, power], exclude: [power_factor]}}
+      - {key: peak, label: Peak demand register, required: false, match: {name: [peak]}}
+    external: [Contracted demand limit, Demand interval (e.g. 15 or 30 min)]
+    logic:
+      - Project the current demand interval's average; alert when it would exceed the month's peak or the limit.
+    output: Alerts with minutes left and kW to shed.
+    runs: Every minute
+    history: None
+
+  - id: power-quality
+    title: Power factor and voltage monitoring
+    method: [rules]
+    standards: [Utility power factor limits, EN 50160 voltage bands]
+    why: Measured values against fixed bands.
+    slots:
+      - {key: pf, label: Power factor, required: true, match: {name: [power_factor]}}
+      - {key: voltage, label: Voltage, required: false, match: {name: [voltage]}}
+    logic:
+      - Flag power factor below the tariff limit and voltage outside its band; estimate penalty cost.
+    output: Daily power-quality report with penalty estimate.
+    runs: Every 15 min
+    history: None
+
+  - id: solar-performance-ratio
+    title: Solar performance ratio
+    method: [statistics]
+    standards: [IEC 61724]
+    why: Actual yield against expected yield from irradiance and rated power.
+    slots:
+      - {key: generation, label: Solar energy or power, required: true, match: {name: [energy_generated, generated, active_power, solar]}}
+      - {key: irradiance, label: Irradiance, required: false, match: {name: [irradiance]}}
+    external: [Plant rating, Irradiance from a weather API if no sensor]
+    logic:
+      - "Performance ratio = actual kWh ÷ (rated kWp × irradiation in kWh/m²); flag inverters below their peers."
+    output: Daily and monthly performance ratio per plant and inverter.
+    runs: Daily
+    history: None
+
+  - id: load-shifting-tariff
+    title: Load shifting and battery dispatch against tariff
+    method: [optimisation]
+    standards: [Linear / mixed-integer programming]
+    why: Deciding when to charge, discharge or shift flexible load under tariff and capacity limits is an optimisation.
+    solver: scripts/optimise/budget_select.py
+    slots:
+      - {key: demand, label: Site demand, required: true, match: {name: [power_demand, active_power, demand], exclude: [power_factor]}}
+      - {key: battery, label: Battery state of charge, required: false, match: {name: [state_of_charge, soc, battery]}}
+    external: [Tariff by hour, Battery capacity and power limits, Flexible loads]
+    logic:
+      - Day-ahead load profile from weekday averages (statistics).
+      - "Solve: hourly charge, discharge and shift decisions to minimise cost within limits."
+    output: Day-ahead dispatch plan with expected saving.
+    runs: Daily
+    history: 4 weeks
+
+  - id: energy-load-forecast
+    title: Short-term load forecast
+    method: [ml]
+    why: Accurate hourly forecasts need a trained model with weather and calendar inputs.
+    slots:
+      - {key: energy, label: Energy or demand history, required: true, match: {name: [energy, demand, power], exclude: [power_factor]}}
+    logic:
+      - Train a time-series model per feeder or site; retrain regularly.
+    output: Hourly load forecast.
+    runs: Hourly
+    history: 12 months

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PointProof Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1C2630; --muted:#56626D; --faint:#8E99A3; --rule:#D3D9DE; --rule-strong:#9AA5AF;
+  --paper:#FFFFFF; --panel:#F3F5F6; --panel-2:#E9EDF0;
+  --steel:#2E5E8C; --steel-ink:#24496D; --steel-tint:#E3EAF2; --steel-mid:#9DB5CF;
+  --warn:#9A6A00; --warn-tint:#FBF1D9; --bad:#A33A2B; --bad-tint:#F8E3DF; --ok:#2F6B4F;
+  --head:'Barlow Semi Condensed','Arial Narrow',sans-serif; --body:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --r-rules:#2E5E8C; --r-statistics:#4F7FA8; --r-optimisation:#7A6A9E; --r-ml:#8C5A3C; --r-genai:#5C7A6A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.45 var(--body);color:var(--ink);background:var(--panel)}
+h1,h2,h3{font-family:var(--head);font-weight:600;margin:0;line-height:1.1}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--muted)}
+
+/* ---------- top bar ---------- */
+.top{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;padding:10px 18px;background:var(--ink);color:#fff}
+.mark{font-family:var(--head);font-weight:700;font-size:20px;letter-spacing:.01em;display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.mark small{font-weight:500;font-size:13px;color:#AFC0D0}
+.proj{display:flex;flex-direction:column;min-width:0}
+.proj input{background:transparent;border:0;border-bottom:1px dashed #5D6F80;color:#fff;font-family:var(--head);font-size:18px;font-weight:600;padding:1px 0;width:100%;max-width:520px}
+.proj span{font-size:12px;color:#AFC0D0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actions{display:flex;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 9px;border-radius:3px;white-space:nowrap}
+.badge.ok{background:#E4EFE9;color:var(--ok)} .badge.bad{background:var(--bad-tint);color:var(--bad)}
+.btn{border:1px solid var(--rule-strong);background:var(--paper);padding:6px 11px;border-radius:3px;font-size:13px}
+.btn:hover{border-color:var(--steel)}
+.top .btn{background:transparent;border-color:#5D6F80;color:#fff}
+.top .btn:hover{border-color:#fff}
+.btn.primary{background:var(--steel);border-color:var(--steel);color:#fff}
+.menu{position:relative}
+.menu-list{position:absolute;right:0;top:calc(100% + 4px);background:var(--paper);color:var(--ink);border:1px solid var(--rule-strong);border-radius:3px;min-width:200px;z-index:20;display:none;box-shadow:0 6px 18px rgba(28,38,48,.15)}
+.menu.open .menu-list{display:block}
+.menu-list button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 12px;font-size:13px}
+.menu-list button:hover{background:var(--panel)}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:268px 1fr;min-height:calc(100% - 58px)}
+aside{background:var(--paper);border-right:1px solid var(--rule);padding:16px;display:flex;flex-direction:column;gap:18px}
+aside h3{font-size:14px;color:var(--muted);margin-bottom:6px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.field select,.field input{border:1px solid var(--rule-strong);border-radius:3px;padding:6px 8px;background:var(--paper)}
+.hint{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--rule-strong);background:var(--paper);border-radius:999px;padding:3px 10px;font-size:12.5px}
+.chip[aria-pressed="true"]{background:var(--steel);border-color:var(--steel);color:#fff}
+main{padding:16px 20px 40px;min-width:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--rule-strong);margin-bottom:14px}
+.tabs button{border:0;background:none;padding:8px 14px;font-family:var(--head);font-size:16px;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--steel)}
+.view{display:none} .view.on{display:block}
+
+/* ---------- summary ---------- */
+.summary{display:grid;grid-template-columns:minmax(220px,1.1fr) 1.3fr 1fr;gap:14px;margin-bottom:16px}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:12px 14px}
+.card h3{font-size:14px;color:var(--muted);margin-bottom:8px}
+.big{font-family:var(--head);font-weight:700;font-size:46px;line-height:1;color:var(--steel)}
+.big small{font-size:18px;color:var(--muted);font-weight:600;margin-left:6px}
+.split{display:flex;height:10px;border-radius:2px;overflow:hidden;background:var(--panel-2);margin:10px 0 4px}
+.split i{background:var(--steel)}
+.cap{margin-top:10px;font-size:12.5px}
+.cap .track{height:6px;background:var(--panel-2);border-radius:2px;margin-top:4px;position:relative;overflow:hidden}
+.cap .fill{height:100%;background:var(--steel)} .cap.over .fill{background:var(--warn)}
+.cap.over{color:var(--warn)}
+/* ladder */
+.ladder{display:flex;flex-direction:column-reverse;gap:4px}
+.rung{display:grid;grid-template-columns:128px 1fr 34px;align-items:center;gap:8px;font-size:13px}
+.rung .bar{height:16px;background:var(--panel-2);border-radius:2px;position:relative}
+.rung .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px}
+.rung b{text-align:right;font-family:var(--head);font-size:16px}
+.rung.locked{color:var(--faint)} .rung.locked .bar{background:repeating-linear-gradient(45deg,var(--panel-2) 0 6px,#F7F8F9 6px 12px)}
+.rung-l{display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.hb{display:grid;grid-template-columns:minmax(90px,1fr) 2fr 70px;gap:8px;align-items:center;font-size:13px;margin:3px 0}
+.hb .t{height:10px;background:var(--panel-2);border-radius:2px;overflow:hidden} .hb .t i{display:block;height:100%;background:var(--steel)}
+.hb span:last-child{text-align:right;color:var(--muted);font-size:12.5px} .hb b{color:var(--ink)}
+
+/* ---------- requirement list ---------- */
+.listbar{display:flex;gap:10px;align-items:center;margin:6px 0 8px;flex-wrap:wrap}
+.listbar input{flex:1;min-width:200px;border:1px solid var(--rule-strong);border-radius:3px;padding:7px 10px}
+.reqs{background:var(--paper);border:1px solid var(--rule);border-radius:4px}
+.req{display:grid;grid-template-columns:64px minmax(180px,1fr) 170px 170px 104px;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--rule);cursor:pointer}
+.req:last-child{border-bottom:0}
+.req:hover{background:#FAFBFC}
+.req.sel{background:var(--steel-tint)}
+.req.out .t-title{color:var(--muted)}
+.ref{font-family:var(--head);font-weight:700;font-size:15px}
+.t-title{font-weight:500}
+.t-group{font-size:12px;color:var(--muted)}
+.mchips{display:flex;gap:4px;flex-wrap:wrap}
+.m{font-size:11.5px;padding:1px 7px;border-radius:2px;color:#fff;font-weight:500;white-space:nowrap}
+.proof{font-size:12.5px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.proof.bad{color:var(--bad)} .proof.warn{color:var(--warn)}
+.toggle{display:inline-flex;border:1px solid var(--rule-strong);border-radius:3px;overflow:hidden;font-size:12.5px}
+.toggle button{border:0;background:var(--paper);padding:4px 10px}
+.toggle button[aria-pressed="true"]{background:var(--steel);color:#fff}
+.toggle button.outb[aria-pressed="true"]{background:var(--muted)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+
+/* ---------- detail drawer ---------- */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,96vw);background:var(--paper);border-left:1px solid var(--rule-strong);box-shadow:-10px 0 30px rgba(28,38,48,.12);transform:translateX(102%);transition:transform .18s ease;z-index:30;display:flex;flex-direction:column}
+.drawer.open{transform:none}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+.drawer header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--rule)}
+.drawer .body{overflow:auto;padding:14px 16px 30px;display:flex;flex-direction:column;gap:12px}
+.drawer label{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.drawer input,.drawer textarea{border:1px solid var(--rule-strong);border-radius:3px;padding:6px 8px;font-size:13.5px;color:var(--ink);width:100%}
+.drawer textarea{min-height:58px;resize:vertical}
+.mpick{display:flex;gap:6px;flex-wrap:wrap}
+.drawer input[type=checkbox]{width:auto;margin:0}
+.mpick label{flex-direction:row;align-items:center;gap:5px;border:1px solid var(--rule-strong);border-radius:3px;padding:3px 8px;color:var(--ink)}
+.plist{border:1px solid var(--rule);border-radius:3px;max-height:220px;overflow:auto}
+.prow{display:grid;grid-template-columns:18px 52px 1fr 22px;gap:6px;align-items:center;padding:5px 8px;border-bottom:1px solid var(--rule);font-size:12.5px}
+.prow:last-child{border-bottom:0}
+.prow .x{border:0;background:none;color:var(--faint);font-size:15px;line-height:1}
+.prow .x:hover{color:var(--bad)}
+.err{font-size:12.5px;color:var(--bad);background:var(--bad-tint);padding:6px 9px;border-radius:3px}
+
+/* ---------- architecture, points, gaps ---------- */
+.arch-wrap{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:12px;overflow:auto}
+.arch-wrap svg{display:block;width:100%;height:auto;min-width:860px}
+.ptable{width:100%;border-collapse:collapse;background:var(--paper);font-size:12.5px}
+.ptable th{position:sticky;top:0;background:var(--ink);color:#fff;text-align:left;font-family:var(--head);font-weight:600;font-size:13.5px;padding:6px 8px}
+.ptable td{border-bottom:1px solid var(--rule);padding:5px 8px;vertical-align:top}
+.ptable tr.unused td{color:var(--muted)}
+.gap{background:var(--paper);border:1px solid var(--rule);border-left:4px solid var(--warn);border-radius:3px;padding:9px 12px;margin-bottom:8px;font-size:13px}
+.gap.bad{border-left-color:var(--bad)}
+.suggest{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.sug{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:10px 12px;font-size:13px;display:flex;flex-direction:column;gap:6px}
+.sug .st{font-size:12px;font-weight:600}
+.sug .st.ready{color:var(--ok)} .sug .st.partial{color:var(--warn)} .sug .st.blocked{color:var(--muted)}
+
+/* ---------- drop zone ---------- */
+.drop{position:fixed;inset:0;background:rgba(46,94,140,.12);border:3px dashed var(--steel);display:none;align-items:center;justify-content:center;z-index:50;font-family:var(--head);font-size:26px;color:var(--steel-ink)}
+.drop.on{display:flex}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:3px;font-size:13px;white-space:pre-line;z-index:60;display:none;max-width:80vw}
+#toast.on{display:block}
+
+/* ---------- report (print) ---------- */
+#report{display:none}
+@media print{
+  @page{size:A4 landscape;margin:12mm}
+  body{background:#fff}
+  .top,.shell,.drawer,.drop{display:none!important}
+  #report{display:block}
+  #report section{break-after:page}
+  #report section:last-child{break-after:auto}
+  #report h1{font-size:26pt;margin-bottom:4px}
+  #report h2{font-size:16pt;margin:0 0 8px}
+  #report table{width:100%;border-collapse:collapse;font-size:8.5pt}
+  #report th{background:#2F4558!important;color:#fff;text-align:left;padding:4px 6px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #report td{border-bottom:1px solid #ccc;padding:4px 6px;vertical-align:top}
+  #report tr{break-inside:avoid}
+  #report .kp{display:flex;gap:12px;margin:10px 0}
+  #report .kp div{border:1px solid #ccc;border-top:4px solid #2E5E8C;padding:6px 10px;flex:1;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #report .kp b{font-family:var(--head);font-size:26pt;color:#2E5E8C;display:block}
+  #report svg{width:100%;height:auto;max-height:165mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (max-width:1100px){.summary{grid-template-columns:1fr 1fr}.req{grid-template-columns:56px 1fr 104px}.req .c-m,.req .c-proof{display:none}}
+@media (max-width:760px){.shell{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--rule)}.summary{grid-template-columns:1fr}.top{grid-template-columns:1fr;gap:8px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="mark">PointProof <small>Studio</small></div>
+  <div class="proj"><input id="projName" aria-label="Project name"><span id="srcLine"></span></div>
+  <div class="actions">
+    <span id="valBadge" class="badge ok" role="status"></span>
+    <button class="btn" id="btnImport">Import</button>
+    <div class="menu" id="exportMenu"><button class="btn primary" id="btnExport" aria-haspopup="true" aria-expanded="false">Export</button>
+      <div class="menu-list" role="menu">
+        <button role="menuitem" data-exp="json">Assessment (.json)</button>
+        <button role="menuitem" data-exp="xlsx">Excel report (.xlsx)</button>
+        <button role="menuitem" data-exp="csv">Requirements (.csv)</button>
+        <button role="menuitem" data-exp="pdf">PDF report (print)</button>
+        <button role="menuitem" data-exp="html">This studio with your changes (.html)</button>
+      </div></div>
+  </div>
+</header>
+<input type="file" id="fileIn" accept=".json,.csv,.txt,.tsv,.xml" multiple hidden>
+
+<div class="shell">
+<aside>
+  <div>
+    <h3>Delivery policy</h3>
+    <div class="field"><label for="policy">Highest method your team delivers</label>
+      <select id="policy"><option value="rules">Rules only</option><option value="statistics">Up to statistics</option><option value="optimisation">Up to optimisation (OR)</option><option value="ml">Up to machine learning</option></select>
+      <span class="hint">GenAI can be added on top of any rung.</span></div>
+  </div>
+  <div class="field"><label for="capacity">Items your team can deliver</label>
+    <input id="capacity" type="number" min="0" placeholder="No limit"><span class="hint">Leave empty for no limit.</span></div>
+  <div><h3>Show</h3><div class="chips" id="verdictChips"></div></div>
+  <div><h3>Group</h3><div class="chips" id="groupChips"></div></div>
+  <div><h3>Method</h3><div class="chips" id="methodChips"></div></div>
+  <div style="margin-top:auto" class="hint">Edits are saved in this browser. Export the assessment to keep or share them.<br><button class="btn" id="btnReset" style="margin-top:8px">Reset to file</button></div>
+</aside>
+
+<main>
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="scope">Scope</button>
+    <button role="tab" aria-selected="false" data-tab="suggest">Suggest</button>
+    <button role="tab" aria-selected="false" data-tab="arch">Architecture</button>
+    <button role="tab" aria-selected="false" data-tab="points">Points</button>
+    <button role="tab" aria-selected="false" data-tab="gaps">Gaps</button>
+  </nav>
+
+  <section class="view on" id="v-scope">
+    <div class="summary">
+      <div class="card"><h3>Requirements covered</h3><div class="big" id="kPct"></div><div class="split"><i id="kSplit"></i></div><div class="muted" id="kLine" style="font-size:12.5px"></div>
+        <div class="cap" id="kCap"></div></div>
+      <div class="card"><h3>Method ladder (applicable items, by highest rung)</h3><div class="ladder" id="ladder"></div></div>
+      <div class="card"><h3>Coverage by group</h3><div id="byGroup"></div></div>
+    </div>
+    <div class="listbar"><input id="q" type="search" placeholder="Search requirements, points or text" aria-label="Search requirements"><button class="btn" id="btnAdd">Add requirement</button></div>
+    <div class="reqs" id="reqs" role="list"></div>
+  </section>
+
+  <section class="view" id="v-suggest">
+    <p class="muted" style="margin-top:0">Library use cases matched against your points. <b>Ready</b>: every required point type exists. Add one to create a draft requirement with its points, logic and output.</p>
+    <div class="chips" id="domainChips" style="margin-bottom:12px"></div>
+    <div class="suggest" id="sugList"></div>
+  </section>
+
+  <section class="view" id="v-arch"><div class="arch-wrap" id="arch"></div>
+    <p class="hint">Generated from the applicable items: each engine lists the requirements it serves; source tiles show points used of the total per system.</p></section>
+
+  <section class="view" id="v-points">
+    <div class="listbar"><input id="pq" type="search" placeholder="Search points" aria-label="Search points">
+      <div class="chips" id="pFilter"></div></div>
+    <div style="max-height:70vh;overflow:auto;border:1px solid var(--rule);border-radius:4px"><table class="ptable" id="ptable"></table></div>
+    <div style="margin-top:14px" class="card"><h3>Points used per system</h3><div id="bySystem"></div></div>
+  </section>
+
+  <section class="view" id="v-gaps"><div id="gaps"></div></section>
+</main>
+</div>
+
+<aside class="drawer" id="drawer" aria-label="Requirement detail"><header><h2 id="dTitle"></h2><button class="btn" id="dClose">Close</button></header><div class="body" id="dBody"></div></aside>
+<div class="drop" id="drop">Drop a points list (CSV, tag export, BACnet EDE, Haystack JSON, OPC UA NodeSet, points.json) or an assessment.json</div>
+<div id="report"></div>
+
+<script type="application/json" id="pp-data">{"assessment":{"project":"Northgate Office Campus (fictional demo)","points_source":"points.csv","policy":{"max_method":"optimisation"},"items":[{"ref":"REQ-01","title":"Find plant running when the building is empty","group":"Energy","verdict":"applicable","usecase":"ecm-out-of-hours","method":["rules","genai"],"why":"A run status compared with the time schedule and occupancy is a direct check; GenAI only writes the weekly summary.","points":[{"id":7,"name":"AHU1.SF.STS"},{"id":12,"name":"AHU1.SCHED"},{"id":9,"name":"AHU1.KW"},{"id":16,"name":"FCU301.STS"},{"id":15,"name":"FCU301.OCC"},{"id":21,"name":"CH1.STS"},{"id":25,"name":"CH1.KW"},{"id":28,"name":"CHWP1.STS"},{"id":39,"name":"PC.ENT.CNT"}],"other_inputs":"Building calendar (public holidays).","logic":["Every 15 min: equipment on outside its scheduled hours, or with zone and entrance counts at zero (e.g. for 30 min).","Energy wasted = measured kW × time running out of hours.","Weekly: rank by kWh wasted; GenAI drafts a short note per item for the energy manager."],"output":"Out-of-hours events per asset with kWh and cost; weekly summary.","example":"Sat 14 Nov: AHU-1 ran 06:10–18:40 with the schedule off and 0 people counted; 11.2 kW × 12.5 h = 140 kWh (≈ 21 at 0.15/kWh).","runs":"Every 15 min; summary weekly","history":"None"},{"ref":"REQ-02","title":"Weather-corrected monthly energy performance","group":"Energy","verdict":"applicable","usecase":"energy-baseline","method":["statistics"],"why":"A regression of daily energy on cooling degree days and occupancy (IPMVP Option C, ASHRAE Guideline 14). No ML training.","points":[{"id":30,"name":"MTR.MAIN.KWH"},{"id":29,"name":"WS.OAT"},{"id":39,"name":"PC.ENT.CNT"},{"id":34,"name":"MTR.MAIN.ONL"}],"other_inputs":"Building calendar.","logic":["Daily kWh from the main incomer; drop days when the meter was offline.","Cooling degree days from outside air temperature (base e.g. 18 °C, to confirm).","Fit kWh = a + b × CDD + c × people on 12 months; accept only if CV(RMSE) and NMBE meet Guideline 14.","Monthly: actual vs expected, in kWh and %."],"output":"Monthly table and tags: expected kWh, actual kWh, deviation %.","example":"October: actual 212,400 kWh; expected 198,900 kWh (CDD 402, 1,120 people/day); +6.8%, above the ±5% band.","runs":"Daily; report monthly; refit quarterly","history":"12 months"},{"ref":"REQ-03","title":"Sub-meter reconciliation","group":"Energy","verdict":"applicable","usecase":"meter-balance-drift","method":["statistics"],"why":"Main minus the sum of sub-meters is arithmetic; drift is a running sum (CUSUM) of that gap.","points":[{"id":30,"name":"MTR.MAIN.KWH"},{"id":35,"name":"MTR.HVAC.KWH"},{"id":36,"name":"MTR.LTG.KWH"},{"id":37,"name":"MTR.SP.KWH"},{"id":34,"name":"MTR.MAIN.ONL"}],"logic":["Daily: unmetered = main − (HVAC + lighting + small power).","Baseline share of unmetered load from the first 60 days.","CUSUM on the daily share; alert when it crosses its limit (e.g. 5 × daily std, to confirm)."],"output":"Daily reconciliation tags and drift alerts.","example":"Unmetered load rose from 6% to 13% over 9 days; CUSUM limit crossed on 19 Nov; likely a failed CT on the small power board.","runs":"Daily","history":"60 days","missing":["CT ratios and sub-meter hierarchy (master data)"]},{"ref":"REQ-04","title":"Chilled-water temperature reset","group":"Energy","verdict":"applicable","usecase":"chw-setpoint-reset","method":["rules"],"why":"Trim-and-respond on cooling valve positions is a fixed rule; no forecasting needed.","points":[{"id":24,"name":"CH1.CHWSTSP"},{"id":22,"name":"CH1.CHWST"},{"id":6,"name":"AHU1.CLGVLV"},{"id":13,"name":"FCU301.ZNT"},{"id":18,"name":"FCU302.ZNT"}],"logic":["Every 10 min: if the AHU cooling valve is below 85% open and zones are within setpoint, raise the setpoint by 0.3 °C.","If the valve is above 95% or a zone is 1 °C above setpoint, lower by 0.5 °C.","Limits 6.5–10 °C (to confirm). Each change goes to the operator for approval before it is written."],"output":"Setpoint recommendation queue with reason; written to CH1.CHWSTSP after approval.","example":"13:20: valve 62%, zones 23.1 / 23.4 °C (setpoints 24 °C); recommend 7.0 → 7.3 °C.","runs":"Every 10 min","history":"None"},{"ref":"REQ-05","title":"Fresh-air reduction on low CO2","group":"Energy","verdict":"applicable","usecase":"ecm-excess-fresh-air","method":["rules"],"why":"Damper position against a CO2 band is a fixed demand-controlled ventilation rule.","points":[{"id":5,"name":"AHU1.OAD"},{"id":4,"name":"AHU1.RACO2"},{"id":7,"name":"AHU1.SF.STS"}],"logic":["While the fan runs: if return CO2 \u003c 600 ppm and the damper is above minimum, recommend the minimum position (e.g. 20%).","If CO2 > 900 ppm, recommend opening in 10% steps. Operator approves before writing."],"output":"Damper recommendations and hours of excess fresh air per week.","example":"Tue 10:00–15:00: CO2 480–560 ppm with the damper at 65%; recommend 20%.","runs":"Every 15 min","history":"None"},{"ref":"REQ-06","title":"Peak demand warnings","group":"Energy","verdict":"applicable","usecase":"peak-demand-alerts","method":["rules"],"why":"Projecting the current demand interval against the month's peak is arithmetic.","points":[{"id":31,"name":"MTR.MAIN.KW"},{"id":32,"name":"MTR.MAIN.KWPK"}],"other_inputs":"Contracted demand limit; demand interval length (e.g. 30 min).","logic":["Every minute: projected interval average = energy so far ÷ elapsed time.","Warn when the projection exceeds the month's peak or 95% of the contracted limit."],"output":"Warning with minutes left in the interval and kW to shed.","example":"14:12: projected 1,410 kW against a month peak of 1,380 kW; shed 30 kW within 18 min.","runs":"Every minute","history":"None"},{"ref":"REQ-07","title":"Maintenance scheduling across the technician team","group":"Maintenance","verdict":"applicable","usecase":"maintenance-scheduling","method":["optimisation"],"solver":"assignment with capacity (CP-SAT)","why":"Assigning tasks to technicians and days within skills, hours and due dates is an assignment problem; a solver gives the best feasible week.","points":[{"id":44,"name":"CMMS.WO.ID"},{"id":45,"name":"CMMS.WO.STATUS"},{"id":46,"name":"CMMS.WO.PRIORITY"},{"id":48,"name":"CMMS.WO.SLADUE"},{"id":11,"name":"AHU1.FLT"},{"id":27,"name":"CH1.FLT"},{"id":17,"name":"FCU301.ALM"},{"id":10,"name":"AHU1.HRS"},{"id":26,"name":"CH1.HRS"}],"other_inputs":"Technician skills, shifts and hours; task durations by type.","logic":["Tasks = open work orders plus faults without a work order plus run-hour service intervals due this week.","Variables: task × technician × day. Constraints: skill match, hours per day, one technician per task.","Maximise priority served minus a penalty per day late; solve with CP-SAT (see scripts/optimise/schedule_maintenance.py).","Supervisor approves the plan before work orders are updated."],"output":"Weekly plan per technician and day; unscheduled tasks with the reason.","example":"Week 48: 23 tasks, 21 scheduled; T2 Monday: chiller fault WO-311 (4 h) then AHU-1 filter (1 h); 2 low-priority tasks moved to next week.","runs":"Daily at 06:00","history":"None","missing":["Technician skills and shift rota (CMMS master data)"]},{"ref":"REQ-08","title":"Washroom consumables restocking","group":"Operations","verdict":"applicable","usecase":"consumables-reorder","method":["statistics","optimisation"],"solver":"inventory (s, Q) policy","why":"Usage per visitor is an average (statistics); the reorder point and order quantity come from a standard inventory model.","points":[{"id":42,"name":"WC.G.SOAP"},{"id":43,"name":"WC.G.TOWEL"},{"id":39,"name":"PC.ENT.CNT"}],"other_inputs":"Supplier lead time, unit cost, order cost.","logic":["Daily usage = drop in dispenser level, scaled to people counted.","Refill task when a dispenser is below 20%.","Reorder point = demand over lead time + safety stock (z × σ × √L); order quantity by EOQ (see scripts/optimise/reorder.py)."],"output":"Refill tasks for the cleaning team; weekly order list.","example":"Towels: 41 packs/day average (σ 9), lead time 5 days; reorder at 238 packs, order 610.","runs":"Hourly refills; weekly orders","history":"4 weeks","missing":["Stock on hand (stores system)"]},{"ref":"REQ-09","title":"Plain-language questions about the building","group":"Operations","verdict":"applicable","usecase":"copilot-nlq","method":["genai"],"why":"A language model turns the question into read-only queries on the points and explains the result; it never writes.","points":[{"id":1,"name":"AHU1.SAT"},{"id":13,"name":"FCU301.ZNT"},{"id":18,"name":"FCU302.ZNT"},{"id":21,"name":"CH1.STS"},{"id":25,"name":"CH1.KW"},{"id":30,"name":"MTR.MAIN.KWH"},{"id":31,"name":"MTR.MAIN.KW"},{"id":39,"name":"PC.ENT.CNT"}],"logic":["Map the question to points with the point list and tag descriptions.","Run read-only queries on live values and history.","Answer with the numbers and the point tags used, so every answer can be checked."],"output":"Answers in chat with the tags and time range used.","example":"Q: Was level 3 warm yesterday afternoon? A: FCU-301 averaged 25.6 °C 14:00–17:00 against 24 °C (FCU301.ZNT); FCU-302 stayed at 24.2 °C.","runs":"On demand","history":"As stored"},{"ref":"REQ-10","title":"Open work orders ranked by urgency","group":"Maintenance","verdict":"applicable","usecase":"work-order-prioritisation","method":["rules","statistics"],"why":"A weighted score of priority and time left to the SLA, with typical fix times (medians) from closed orders.","points":[{"id":44,"name":"CMMS.WO.ID"},{"id":45,"name":"CMMS.WO.STATUS"},{"id":46,"name":"CMMS.WO.PRIORITY"},{"id":48,"name":"CMMS.WO.SLADUE"},{"id":49,"name":"CMMS.WO.CLOSED"}],"logic":["Median time to close per priority from the last 6 months.","Score = priority weight × (1 + share of SLA time used); flag orders whose median fix time exceeds the time left.","Re-rank every 30 min."],"output":"Ranked queue with an at-risk flag.","example":"WO-327 (P2): 70% of SLA used, median fix 6 h, 4 h left → at risk, rank 1.","runs":"Every 30 min","history":"6 months of closed orders"},{"ref":"REQ-11","title":"Chiller failure prediction weeks ahead","group":"Maintenance","verdict":"out_of_scope","reason":"Needs a trained failure-prediction model (ML); the policy stops at optimisation.","usecase":"remaining-useful-life"},{"ref":"REQ-12","title":"Next-day building load forecast","group":"Energy","verdict":"out_of_scope","reason":"Needs a trained forecasting model (ML); the policy stops at optimisation.","usecase":"demand-forecast"},{"ref":"REQ-13","title":"Footfall counting from CCTV video","group":"Operations","verdict":"out_of_scope","reason":"Needs video analytics on the CCTV system; no camera feeds are in the points list."}],"architecture":[{"layer":"Field systems","does":"BMS, meters, people counter, washroom sensors and CMMS, as in the points list.","data":"All 49 points.","owner":"Site owner"},{"layer":"Platform","does":"Historian with quality flags; CMMS integration.","data":"Live values, history, work orders.","owner":"Platform integrator"},{"layer":"Analytics","does":"Rules, statistics and optimisation jobs; GenAI for summaries and questions.","data":"Read-only.","owner":"AI team"},{"layer":"Operator","does":"Approves setpoint, damper and schedule changes before they are written.","data":"Recommendation queue.","owner":"Facility manager"}]},"points":{"source":"points.csv","format":"table","columns":{"system":"System","equipment":"Equipment","description":"Description","name":"Tag","rw":"Access","units":"Units"},"count":49,"points":[{"id":1,"system":"HVAC","equipment":"AHU-1","description":"Supply air temperature","name":"AHU1.SAT","rw":"R","units":"°C","asset":""},{"id":2,"system":"HVAC","equipment":"AHU-1","description":"Supply air temperature setpoint","name":"AHU1.SATSP","rw":"R/W","units":"°C","asset":""},{"id":3,"system":"HVAC","equipment":"AHU-1","description":"Return air temperature","name":"AHU1.RAT","rw":"R","units":"°C","asset":""},{"id":4,"system":"HVAC","equipment":"AHU-1","description":"Return air CO2","name":"AHU1.RACO2","rw":"R","units":"ppm","asset":""},{"id":5,"system":"HVAC","equipment":"AHU-1","description":"Outdoor air damper position","name":"AHU1.OAD","rw":"R/W","units":"%","asset":""},{"id":6,"system":"HVAC","equipment":"AHU-1","description":"Cooling valve position","name":"AHU1.CLGVLV","rw":"R/W","units":"%","asset":""},{"id":7,"system":"HVAC","equipment":"AHU-1","description":"Supply fan run status","name":"AHU1.SF.STS","rw":"R","units":"","asset":""},{"id":8,"system":"HVAC","equipment":"AHU-1","description":"Supply fan speed","name":"AHU1.SF.SPD","rw":"R/W","units":"%","asset":""},{"id":9,"system":"HVAC","equipment":"AHU-1","description":"Supply fan power","name":"AHU1.KW","rw":"R","units":"kW","asset":""},{"id":10,"system":"HVAC","equipment":"AHU-1","description":"Supply fan run hours","name":"AHU1.HRS","rw":"R","units":"h","asset":""},{"id":11,"system":"HVAC","equipment":"AHU-1","description":"Dirty filter alarm","name":"AHU1.FLT","rw":"R","units":"","asset":""},{"id":12,"system":"HVAC","equipment":"AHU-1","description":"Time schedule","name":"AHU1.SCHED","rw":"R/W","units":"","asset":""},{"id":13,"system":"HVAC","equipment":"FCU-301","description":"Zone air temperature","name":"FCU301.ZNT","rw":"R","units":"°C","asset":""},{"id":14,"system":"HVAC","equipment":"FCU-301","description":"Zone air temperature setpoint","name":"FCU301.ZNTSP","rw":"R/W","units":"°C","asset":""},{"id":15,"system":"HVAC","equipment":"FCU-301","description":"Zone occupancy sensor","name":"FCU301.OCC","rw":"R","units":"","asset":""},{"id":16,"system":"HVAC","equipment":"FCU-301","description":"Fan coil run status","name":"FCU301.STS","rw":"R","units":"","asset":""},{"id":17,"system":"HVAC","equipment":"FCU-301","description":"Fan coil fault alarm","name":"FCU301.ALM","rw":"R","units":"","asset":""},{"id":18,"system":"HVAC","equipment":"FCU-302","description":"Zone air temperature","name":"FCU302.ZNT","rw":"R","units":"°C","asset":""},{"id":19,"system":"HVAC","equipment":"FCU-302","description":"Zone air temperature setpoint","name":"FCU302.ZNTSP","rw":"R/W","units":"°C","asset":""},{"id":20,"system":"HVAC","equipment":"FCU-302","description":"Zone occupancy sensor","name":"FCU302.OCC","rw":"R","units":"","asset":""},{"id":21,"system":"HVAC","equipment":"Chiller 1","description":"Chiller run status","name":"CH1.STS","rw":"R","units":"","asset":""},{"id":22,"system":"HVAC","equipment":"Chiller 1","description":"Chilled water supply temperature","name":"CH1.CHWST","rw":"R","units":"°C","asset":""},{"id":23,"system":"HVAC","equipment":"Chiller 1","description":"Chilled water return temperature","name":"CH1.CHWRT","rw":"R","units":"°C","asset":""},{"id":24,"system":"HVAC","equipment":"Chiller 1","description":"Chilled water supply temperature setpoint","name":"CH1.CHWSTSP","rw":"R/W","units":"°C","asset":""},{"id":25,"system":"HVAC","equipment":"Chiller 1","description":"Chiller power","name":"CH1.KW","rw":"R","units":"kW","asset":""},{"id":26,"system":"HVAC","equipment":"Chiller 1","description":"Chiller run hours","name":"CH1.HRS","rw":"R","units":"h","asset":""},{"id":27,"system":"HVAC","equipment":"Chiller 1","description":"Chiller fault alarm","name":"CH1.FLT","rw":"R","units":"","asset":""},{"id":28,"system":"HVAC","equipment":"CHW pump 1","description":"Chilled water pump run status","name":"CHWP1.STS","rw":"R","units":"","asset":""},{"id":29,"system":"HVAC","equipment":"Weather station","description":"Outside air temperature","name":"WS.OAT","rw":"R","units":"°C","asset":""},{"id":30,"system":"Energy","equipment":"Main incomer","description":"Main incomer energy","name":"MTR.MAIN.KWH","rw":"R","units":"kWh","asset":""},{"id":31,"system":"Energy","equipment":"Main incomer","description":"Main incomer demand","name":"MTR.MAIN.KW","rw":"R","units":"kW","asset":""},{"id":32,"system":"Energy","equipment":"Main incomer","description":"Peak demand this month","name":"MTR.MAIN.KWPK","rw":"R","units":"kW","asset":""},{"id":33,"system":"Energy","equipment":"Main incomer","description":"Power factor","name":"MTR.MAIN.PF","rw":"R","units":"","asset":""},{"id":34,"system":"Energy","equipment":"Main incomer","description":"Meter online status","name":"MTR.MAIN.ONL","rw":"R","units":"","asset":""},{"id":35,"system":"Energy","equipment":"HVAC board","description":"HVAC sub-meter energy","name":"MTR.HVAC.KWH","rw":"R","units":"kWh","asset":""},{"id":36,"system":"Energy","equipment":"Lighting board","description":"Lighting sub-meter energy","name":"MTR.LTG.KWH","rw":"R","units":"kWh","asset":""},{"id":37,"system":"Energy","equipment":"Small power board","description":"Small power sub-meter energy","name":"MTR.SP.KWH","rw":"R","units":"kWh","asset":""},{"id":38,"system":"Lighting","equipment":"Lighting panel L3","description":"Lighting zone level 3 status","name":"LTG.L3.STS","rw":"R/W","units":"","asset":""},{"id":39,"system":"Occupancy","equipment":"People counter","description":"Entrance people count","name":"PC.ENT.CNT","rw":"R","units":"people","asset":""},{"id":40,"system":"Water","equipment":"Water meter","description":"Cumulative water volume","name":"WTR.MAIN.VOL","rw":"R","units":"m³","asset":""},{"id":41,"system":"Water","equipment":"Water meter","description":"Leak alarm","name":"WTR.MAIN.LEAK","rw":"R","units":"","asset":""},{"id":42,"system":"Washrooms","equipment":"Ground floor washroom","description":"Soap dispenser level","name":"WC.G.SOAP","rw":"R","units":"%","asset":""},{"id":43,"system":"Washrooms","equipment":"Ground floor washroom","description":"Towel dispenser level","name":"WC.G.TOWEL","rw":"R","units":"%","asset":""},{"id":44,"system":"CMMS","equipment":"Work orders","description":"Work order number","name":"CMMS.WO.ID","rw":"R","units":"","asset":""},{"id":45,"system":"CMMS","equipment":"Work orders","description":"Work order status","name":"CMMS.WO.STATUS","rw":"R","units":"","asset":""},{"id":46,"system":"CMMS","equipment":"Work orders","description":"Work order priority","name":"CMMS.WO.PRIORITY","rw":"R","units":"","asset":""},{"id":47,"system":"CMMS","equipment":"Work orders","description":"Assigned technician","name":"CMMS.WO.ASSIGNED","rw":"R","units":"","asset":""},{"id":48,"system":"CMMS","equipment":"Work orders","description":"SLA due date","name":"CMMS.WO.SLADUE","rw":"R","units":"","asset":""},{"id":49,"system":"CMMS","equipment":"Work orders","description":"Completion date","name":"CMMS.WO.CLOSED","rw":"R","units":"","asset":""}]},"library":{"usecases":[{"id":"energy-baseline","domain":"buildings","title":"Weather-normalised energy baseline","method":["statistics"],"why":"A linear model of daily energy on degree days (and occupancy where counted). It can be checked in a spreadsheet and needs no ML training.","slots":[{"key":"energy","label":"Energy meter consumption","required":true,"match":{"name":["energy","kwh","cumulative_water_volume"],"units":["[kmg]?wh","gj","mmbtu","therms?"]}},{"key":"outdoor_temp","label":"Outdoor air temperature (or a weather API)","required":false,"match":{"name":["outside_air_temperature","outdoor_air_temperature","outdoor_ambient_temperature","(outside|outdoor|ambient)_(air_)?temp"],"exclude":["setpoint"]}},{"key":"occupancy","label":"Occupancy count","required":false,"match":{"name":["occupancy_count","people_count","occupancy_percentage","headcount"]}}],"external":["Hourly outdoor temperature per site (weather service) if no outdoor sensor exists","Working days and holidays"],"logic":["Sum each meter per day and drop days with missing or flagged data.","Compute cooling degree days from outdoor temperature against a configurable base.","Regress daily energy on degree days, with occupancy and a working-day flag when available, over 3 to 12 months of data.","Use the model only when CV(RMSE) and NMBE are within ASHRAE Guideline 14 limits; if not, keep the last accepted model.","Each day compare the measured value with the model's prediction; refit once a month."],"output":"Per meter and day: predicted kWh, gap in kWh and %; fit statistics each month.","runs":"Daily; refit monthly","history":"3 months minimum; 12 months to cover every season"},{"id":"meter-balance-drift","domain":"buildings","title":"Sub-meter reconciliation against the main meter","method":["statistics"],"why":"The main meter minus its sub-meters is simple arithmetic; a cumulative sum of that gap shows slow drift.","slots":[{"key":"energy","label":"Meter consumption (parent and sub-meters)","required":true,"match":{"name":["energy","kwh","cumulative_water_volume"],"units":["[kmg]?wh","gj","m3","m³","gal","l"]}},{"key":"comms","label":"Meter online or connectivity status","required":false,"match":{"name":["online_status","connectivity_status","comm_status"]}}],"external":["Meter tree: which sub-meters feed from which main meter"],"logic":["Each day: gap = main meter − total of its sub-meters, as kWh and as a share of the main meter.","Alert when the share stays above a chosen limit for several days.","Track a CUSUM of the daily share against its early baseline to catch gradual drift.","Skip days where any meter in the tree lost communication."],"output":"Alerts naming the meter tree, the size of the gap and when it started; daily gap tags.","runs":"Daily","history":"Gap check from the first day; drift once a baseline exists (about 3 months)"},{"id":"portfolio-benchmarking","domain":"buildings","title":"Energy use intensity benchmark across buildings","method":["statistics"],"why":"Ratios and rankings among buildings of the same type; no ML.","slots":[{"key":"energy","label":"Building energy consumption","required":true,"match":{"name":["energy","kwh"],"units":["[kmg]?wh","gj","mmbtu"]}},{"key":"area","label":"Floor area (point or master data)","required":false,"match":{"name":["\\barea\\b"]}}],"external":["Floor area and building type","Predicted energy from the weather-normalised baseline"],"logic":["Monthly kWh per m² for each building.","Performance ratio = measured ÷ weather-normalised prediction.","Rank buildings within each type; the agent comments on the leaders and laggards."],"output":"Monthly ranking table with a short written commentary.","runs":"Monthly","history":"3 months"},{"id":"fault-energy-cost","domain":"buildings","title":"Wasted energy and cost per active fault","method":["rules"],"why":"Energy above normal while a fault is active, priced at the tariff.","slots":[{"key":"fault","label":"Equipment fault or alarm status","required":true,"match":{"name":["fault_status","alarm","fault","\\btrip(ped)?\\b"]}},{"key":"power","label":"Power (kW) on the asset or its meter","required":true,"match":{"exclude":["power_factor"],"name":["power","demand_kw","_kw\\b"],"units":["[km]?w"]}}],"external":["Fault start and end times from the fault-detection system","Tariff","Which meter serves which asset"],"logic":["While the fault is active, excess kWh = (measured kW − normal kW for that load) × hours.","Without a power point, use nameplate kW × hours and label the figure as an estimate.","Cost = excess kWh × tariff."],"output":"Each fault alert carries its excess kWh, its cost and whether the figure is measured or estimated.","runs":"When a fault clears, and once a day for faults still open","history":"None"},{"id":"ecm-out-of-hours","domain":"buildings","title":"Equipment running outside its schedule","method":["rules"],"why":"Comparing a run status with the time schedule is a direct check.","slots":[{"key":"run","label":"Run status","required":true,"match":{"equipment":["ahu","air handling","fcu","fan coil","fresh air","\\bdx\\b","chiller","pump","unit","compressor","motor","fan"],"exclude":["schedule"],"name":["run_status","fan_status","\\brun_(state|feedback|fb)\\b","\\brunning_status\\b"]}},{"key":"schedule","label":"Schedule status","required":true,"match":{"name":["schedule"]}},{"key":"power","label":"Power or fan speed (to size the saving)","required":false,"match":{"exclude":["power_factor"],"name":["power","fan_speed","supply_fan_speed"],"units":["[km]?w"]}}],"external":["Operating hours","Nameplate kW for units without a power point","Tariff"],"logic":["Raise a finding when a unit is on outside its scheduled hours with no manual override, for at least half an hour (adjustable).","Waste = hours × kW (measured, or nameplate scaled by fan speed) × tariff.","Sort findings by monthly cost; the agent words each recommendation."],"output":"Energy-saving recommendations sorted by estimated monthly cost.","runs":"Rules daily; sorted list weekly","history":"None"},{"id":"ecm-unoccupied-conditioning","domain":"buildings","title":"Conditioning or lighting unoccupied zones","method":["rules"],"why":"Compares whether a space is occupied with whether its equipment is on.","slots":[{"key":"occupancy","label":"Zone occupancy","required":true,"match":{"name":["occupancy_status","occupancy_sensor","occupancy_count"]}},{"key":"run","label":"Unit or lighting run status","required":true,"match":{"exclude":["schedule"],"name":["run_status","lighting_zone"]}}],"external":["Which units and lighting circuits serve which zone"],"logic":["Raise a finding when a zone has been empty for an hour (adjustable) while its unit or lights keep running.","Waste = hours × kW × tariff."],"output":"Findings per zone with estimated waste.","runs":"Daily","history":"None"},{"id":"ecm-excess-fresh-air","domain":"buildings","title":"Excess fresh air","method":["rules"],"why":"Compares damper opening with measured CO2.","slots":[{"key":"damper","label":"Outdoor or fresh air damper position","required":true,"match":{"name":["outdoor_air_damper","freshair_damper","fresh_air_damper"]}},{"key":"co2","label":"CO2 level","required":true,"match":{"name":["co2"]}}],"logic":["Raise a finding when the outdoor-air damper stays open beyond its minimum while CO2 remains low (for example under 600 ppm)."],"output":"Recommendation to lower the minimum outdoor-air position, with the supporting trend.","runs":"Daily","history":"None"},{"id":"chw-setpoint-reset","domain":"buildings","title":"Chilled-water supply setpoint reset (rule-based)","method":["rules"],"why":"Trim-and-respond logic with fixed limits; each change needs operator approval. No forecasting.","slots":[{"key":"chws_sp","label":"Chilled-water supply setpoint (writable)","required":true,"writable":true,"match":{"name":["chilled_water_supply_temperature.*setpoint","chilled_water.*setpoint"]}},{"key":"valve","label":"AHU or FCU cooling valve position","required":true,"match":{"name":["cooling_valve","chilled_water_valve"]}},{"key":"zone_temp","label":"Zone temperature","required":false,"match":{"exclude":["setpoint","\\bsp\\b"],"name":["zone_air_temperature","zone_temperature","room_temperature","room_air_temperature","(zone|room|space)_(air_)?temp"]}},{"key":"chws","label":"Chilled-water supply temperature","required":false,"match":{"exclude":["setpoint"],"name":["chilled_water_supply_temperature"]}}],"external":["Air handlers and fan coils served by each chiller plant","Setpoint limits agreed with the owner and the chiller maker"],"logic":["Raise the setpoint a small step when all cooling valves have stayed well below fully open and zones are comfortable for a while.","Lower it a step when several valves are nearly fully open or a zone runs warm.","Keep within the agreed limits and change no more than once an hour per plant; the operator approves each change."],"output":"Recommendation in the operator queue: current value, proposed value, reason and limits.","runs":"Every 15 min","history":"None"},{"id":"zone-setback","domain":"buildings","title":"Unoccupied zone setpoint setback","method":["rules"],"why":"An empty zone gets a fixed setback that is removed when people return.","slots":[{"key":"occupancy","label":"Zone occupancy","required":true,"match":{"name":["occupancy"]}},{"key":"zone_sp","label":"Zone temperature setpoint (writable)","required":true,"writable":true,"match":{"name":["zone_air_temperature.*setpoint","zone_temperature.*setpoint","room.*temperature.*setpoint"]}}],"logic":["When a zone has been empty for an hour during operating hours, propose raising its cooling setpoint by about 2 °C; return to normal once occupied."],"output":"Setback proposals per zone awaiting approval.","runs":"Every 15 min","history":"None"},{"id":"alarm-kpis","domain":"buildings","title":"Alarm system performance (ISA-18.2 KPIs)","method":["statistics"],"why":"Counts, rates and durations from the alarm log, plus alarms that tend to fire at the same time.","slots":[{"key":"alarms","label":"Alarm or fault points","required":true,"match":{"name":["fault_status","alarm","fault_code","\\btrip(ped)?\\b"]}}],"external":["Alarm log with raise, clear and acknowledge times and priority"],"logic":["Compute alarms per operator per hour, floods, chattering and standing alarms, and the most frequent sources.","Find alarms that repeatedly fire together on connected equipment, and alarms that return after a work order is closed.","Suggest shelving, new limits, on-delays or grouping; the agent writes a summary per shift."],"output":"Weekly alarm performance report, suggested alarm changes and shift summaries.","runs":"Each shift and weekly","history":"30 days"},{"id":"maintenance-prioritisation","domain":"buildings","title":"Maintenance priority score from faults and run hours","method":["rules"],"why":"A weighted score from asset criticality, fault cost and run hours, followed by a draft work order.","slots":[{"key":"fault","label":"Fault status","required":true,"match":{"name":["fault_status","fault","\\btrip(ped)?\\b"]}},{"key":"hours","label":"Run hours","required":false,"match":{"name":["run_hours","run_time","(running|operating)_(hours|time)","hours?_run","hour_?meter"]}},{"key":"wo","label":"CMMS work-order fields","required":false,"match":{"name":["work order","work_order","\\bwo\\b"]}}],"external":["Asset criticality list","Service intervals"],"logic":["Priority = criticality × fault severity × daily cost × days the fault has been open, plus a term for run hours beyond the service interval.","Map score ranges to response times and merge faults on the same asset.","A draft work order is prepared for the operator to approve."],"output":"Sorted maintenance list with draft work orders.","runs":"Daily","history":"None"},{"id":"work-order-prioritisation","domain":"buildings","title":"Open work orders ranked by criticality and SLA","method":["rules","statistics"],"why":"A weighted score plus typical fix times (medians) taken from closed work orders.","slots":[{"key":"wo","label":"Work-order status and dates","required":true,"match":{"name":["work order","work_order","wo_status","completion"]}},{"key":"sla","label":"SLA fields","required":false,"match":{"name":["\\bsla\\b","overdue"]}}],"external":["Asset criticality list","Target response time per priority"],"logic":["Urgency = criticality × priority × how close the order is to its SLA.","Typical fix time per work type = median of recent closed orders; flag orders likely to miss their SLA."],"output":"Sorted queue with at-risk flags and a daily summary for supervisors.","runs":"Every 15 min; summary daily","history":"3–6 months of closed work orders"},{"id":"carbon-trajectory","domain":"buildings","title":"Emissions tracking against a reduction target","method":["statistics"],"why":"Energy multiplied by an emission factor, projected with and without planned projects.","slots":[{"key":"energy","label":"Energy consumption","required":true,"match":{"name":["energy","kwh","\\bgas\\b"],"units":["[kmg]?wh","gj","mmbtu","therms?"]}},{"key":"factor","label":"Carbon intensity factor (point or configured)","required":false,"match":{"name":["carbon"]}}],"external":["Reduction targets","Planned projects with expected savings and dates"],"logic":["Monthly emissions = energy × emission factor for each energy stream.","Project two lines, no action and with planned projects, and show the yearly gap to the target."],"output":"Emissions table and chart with a written summary.","runs":"Monthly","history":"12 months"},{"id":"retrofit-roi","domain":"buildings","title":"Retrofit payback from the measured baseline","method":["rules"],"why":"Arithmetic on measured energy and maintenance cost.","slots":[{"key":"energy","label":"Asset or meter energy","required":true,"match":{"exclude":["power_factor"],"name":["energy","kwh","power"],"units":["[kmg]?wh","[km]?w"]}},{"key":"cost","label":"Maintenance labour and materials","required":false,"match":{"name":["\\blabou?r\\b","materials"]}}],"external":["Project cost and expected saving","Tariff"],"logic":["Yearly saving = energy cost × expected saving share + maintenance cost no longer needed.","Simple payback and return on investment; the agent writes a short business case."],"output":"Short business case per project.","runs":"On request","history":"12 months"},{"id":"copilot-nlq","domain":"buildings","title":"Natural-language copilot over the points","method":["genai"],"why":"The model only turns questions into read-only queries and phrases the result; all figures come from the data.","slots":[{"key":"any","label":"Any time-series point","required":true,"match":{"name":["sensor","status","temperature","energy","power","flow","level","pressure"]}}],"logic":["Interpret the question, pick the points and time range, run read-only queries, and answer only from their results, citing the points used."],"output":"Reply in chat, with a small table or chart and the points it used.","runs":"On demand","history":"None"},{"id":"incident-timeline","domain":"buildings","title":"Incident summary drafted from alarms and work orders","method":["genai"],"why":"The agent puts alarms, events and work orders in time order and spots repeats.","slots":[{"key":"alarms","label":"Alarm or fault points","required":true,"match":{"name":["fault_status","alarm"]}},{"key":"wo","label":"Work-order fields","required":false,"match":{"name":["work order","work_order"]}}],"external":["Alarm and event log"],"logic":["Gather alarms on the affected and connected equipment before and after the event, with acknowledgements and work orders.","Group similar incidents by equipment type and fault and mark repeats."],"output":"Incident report and a monthly list of recurring problems.","runs":"Per incident; monthly","history":"None"},{"id":"equipment-degradation","domain":"buildings","title":"Efficiency drift against commissioning (kW/TR, delta-T)","method":["statistics"],"why":"A monthly efficiency figure compared with its commissioning value; ML only if a simple trend is not enough.","slots":[{"key":"power","label":"Chiller or unit power","required":true,"match":{"exclude":["power_factor"],"name":["power"],"units":["[km]?w"]}},{"key":"temps","label":"Supply and return temperatures","required":true,"match":{"exclude":["setpoint"],"name":["supply_temperature","return_temperature","supply_air_temperature"]}}],"logic":["Each month compute an efficiency figure per asset (for example kW per ton or delta-T) at similar load; alert when its trend passes a limit."],"output":"Drift alerts with the supporting trend.","runs":"Monthly","history":"6 months"},{"id":"demand-forecast","domain":"buildings","title":"Day-ahead building load forecast","method":["ml"],"why":"A reliable forecast needs a trained time-series model, retraining and accuracy tracking.","slots":[{"key":"energy","label":"Meter consumption history","required":true,"match":{"name":["energy","kwh"],"units":["[kmg]?wh"]}}],"external":["Weather forecast service"],"logic":["Train a time-series model per meter on past load, weather forecast and calendar; retrain on a schedule and track accuracy."],"output":"Forecast tags and early peak warnings.","runs":"Hourly","history":"12 months"},{"id":"remaining-useful-life","domain":"buildings","title":"Failure prediction (remaining useful life)","method":["ml"],"why":"Needs recorded failures and a trained survival or degradation model.","slots":[{"key":"hours","label":"Run hours","required":true,"match":{"name":["run_hours","run_time","(running|operating)_(hours|time)","hours?_run","hour_?meter"]}},{"key":"fault","label":"Fault history","required":true,"match":{"name":["fault"]}}],"external":["Failure records from the CMMS"],"logic":["Fit survival or degradation models per equipment class from failure records and operating data."],"output":"Expected time to failure with an uncertainty range.","runs":"Monthly","history":"Several years of failure records"},{"id":"occupancy-forecast","domain":"buildings","title":"Occupancy forecast by space","method":["ml"],"why":"Going beyond weekly average profiles needs a trained forecasting model.","slots":[{"key":"occupancy","label":"People counting","required":true,"match":{"name":["occupancy_count","entry_count","people"]}}],"logic":["Train a model per space on counts, calendar and events."],"output":"Occupancy forecast per space.","runs":"Hourly","history":"12 months"},{"id":"maintenance-scheduling","domain":"buildings","title":"Maintenance scheduling to technicians and days","method":["optimisation"],"solver":"scripts/optimise/schedule_maintenance.py","why":"Assigning prioritised tasks to technicians, skills and days within working hours is an assignment-with-capacity problem; a solver finds the best feasible plan.","slots":[{"key":"fault","label":"Fault or alarm status (to create tasks)","required":true,"match":{"name":["fault","alarm"]}},{"key":"hours","label":"Run hours (service intervals)","required":false,"match":{"name":["run_hours","run_time","(running|operating)_(hours|time)","hours?_run","hour_?meter"]}},{"key":"wo","label":"CMMS work-order fields","required":false,"match":{"name":["work_order","wo_status"]}}],"external":["Technicians with skills and shift hours","Task durations per work type","Priority scores from maintenance-prioritisation"],"logic":["Build tasks from open faults and due services, each with a priority score, skill, duration and due day.","Solve: each task to at most one technician-day; skills must match; hours per technician-day ≤ shift; reward high scores early, penalise lateness.","Unscheduled tasks are reported with the constraint that blocked them; the operator approves the plan."],"output":"Daily schedule per technician and the list of tasks that did not fit.","runs":"Daily, and on new critical faults","history":"None"},{"id":"work-order-assignment","domain":"buildings","title":"Work-order assignment to teams","method":["optimisation"],"solver":"scripts/optimise/schedule_maintenance.py","why":"Matching open work orders to teams by skill, location and SLA risk is a classic assignment problem.","slots":[{"key":"wo","label":"Work-order status and dates","required":true,"match":{"name":["work_order","completion","wo_status"]}},{"key":"team","label":"Assigned team or contractor","required":false,"match":{"name":["assigned","contractor","team"]}}],"external":["Team skills","capacity and coverage areas","SLA targets"],"logic":["Score each work order (criticality × SLA proximity); estimate duration from history medians.","Assign work orders to teams to maximise on-time completions within each team's hours."],"output":"Suggested assignment per team, for the supervisor to confirm.","runs":"Every 15 min","history":"3 months of work orders"},{"id":"retrofit-portfolio","domain":"buildings","title":"Retrofit selection within a budget","method":["optimisation"],"solver":"scripts/optimise/budget_select.py","why":"Choosing which projects to fund under a budget, with mutually exclusive options, is a knapsack problem.","slots":[{"key":"energy","label":"Energy use of the assets concerned","required":true,"match":{"exclude":["power_factor"],"name":["energy","kwh","power"],"units":["[kmg]?wh","[km]?w"]}}],"external":["Candidate projects with cost","expected saving and CO2","Budget"],"logic":["Saving per project from the baseline; cost from estimates.","Solve: maximise annual saving (or CO2) with total cost ≤ budget and at most one option per asset."],"output":"Funded list, total cost, saving, payback; the binding constraint is reported.","runs":"On request (budget cycle)","history":"12 months"},{"id":"consumables-reorder","domain":"buildings","title":"Consumables reorder points and order quantities","method":["optimisation"],"solver":"scripts/optimise/reorder.py","why":"Reorder point and order quantity follow from usage rate, lead time and service level.","slots":[{"key":"level","label":"Consumable level","required":true,"match":{"name":["consumable","dispenser","refill","soap","towel"]}},{"key":"occupancy","label":"Occupancy (to scale usage)","required":false,"match":{"name":["occupancy","people_count","entry_count"]}}],"external":["Lead time and order cost per item","Service level"],"logic":["Daily usage from level drops (scaled by occupancy where available).","Safety stock = z × σ × √(lead time); reorder point = usage × lead time + safety stock; EOQ for the order size."],"output":"Reorder point, safety stock and order quantity per item; alerts when stock reaches the reorder point.","runs":"Daily","history":"8 weeks of level data"},{"id":"waste-collection-routing","domain":"buildings","title":"Bin collection planning and routing","method":["statistics","optimisation"],"solver":"scripts/optimise/route_collection.py","why":"Fill rate per bin is a weekday average (statistics); choosing and ordering tomorrow's pickups within truck capacity is a routing problem.","slots":[{"key":"fill","label":"Bin fill level","required":true,"match":{"name":["fill_level","bin_fill","bin_level"]}}],"external":["Bin locations","Truck count and capacity","Depot"],"logic":["Fill rate per bin and weekday from history.","A bin is due when its expected level tomorrow passes the threshold (e.g. 80%).","Solve CVRP: visit every due bin once, within truck capacity, minimising distance."],"output":"Tomorrow's routes per truck and the bins skipped.","runs":"Daily","history":"4–8 weeks of fill data"},{"id":"cleaning-rostering","domain":"buildings","title":"Cleaning rota driven by footfall","method":["statistics","optimisation"],"solver":"scripts/optimise/schedule_maintenance.py","why":"Demand per zone from occupancy profiles (statistics); placing cleaners across shifts and zones within headcount is a rostering problem.","slots":[{"key":"occupancy","label":"Zone occupancy or footfall","required":true,"match":{"name":["occupancy","entry_count","people_count","footfall"]}},{"key":"requests","label":"Cleaning requests or events","required":false,"match":{"name":["service_request","cleaning","task"]}}],"external":["Staff","shifts and zone travel times","Service levels per zone"],"logic":["Expected demand per zone and hour from weekday profiles.","Assign staff to zones and shifts to cover demand within headcount and break rules."],"output":"Shift plan per zone, with uncovered demand flagged.","runs":"Daily","history":"8 weeks"},{"id":"pue","domain":"datacentres","title":"Power usage effectiveness (PUE)","method":["rules"],"why":"Total facility energy divided by IT energy.","slots":[{"key":"facility","label":"Facility or main incomer energy","required":true,"match":{"name":["energy","kwh","power"],"exclude":["power_factor"]}},{"key":"it","label":"IT load (UPS output or PDU)","required":true,"match":{"name":["ups","pdu","it_load","it_power"]}}],"logic":["PUE = facility energy ÷ IT energy per hour, day and month."],"output":"PUE trend with the cooling and loss breakdown where metered.","runs":"Hourly","history":"None"},{"id":"rack-inlet-compliance","domain":"datacentres","title":"Rack inlet temperature compliance","method":["rules"],"why":"Inlet temperature and humidity against the recommended envelope.","slots":[{"key":"inlet","label":"Rack or cold-aisle inlet temperature","required":true,"match":{"name":["inlet","cold_aisle","rack.*temperature","supply_air_temperature"]}},{"key":"humidity","label":"Humidity or dew point","required":false,"match":{"name":["humidity","dew_point"]}}],"logic":["Flag racks outside the envelope; list hot spots by row."],"output":"Compliance % and hot-spot list.","runs":"Every 15 min","history":"None"},{"id":"cooling-setpoint-raise","domain":"datacentres","title":"Cooling setpoint raise recommendations","method":["rules"],"why":"If all inlets are well inside the envelope, supply setpoints can rise in small steps.","slots":[{"key":"sp","label":"CRAH/CRAC supply or return setpoint (writable)","required":true,"writable":true,"match":{"name":["setpoint"]}},{"key":"inlet","label":"Rack inlet temperatures","required":true,"match":{"name":["inlet","cold_aisle","return_air_temperature","supply_air_temperature"]}}],"logic":["Every hour: if the warmest inlet is more than 2 °C below the limit, recommend +0.5 °C; reverse when inlets warm."],"output":"Setpoint recommendations for approval.","runs":"Hourly","history":"None"},{"id":"capacity-planning","domain":"datacentres","title":"Power and cooling capacity headroom","method":["statistics"],"why":"Peak utilisation per room and trend to the limit.","slots":[{"key":"it","label":"IT load per room or PDU","required":true,"match":{"name":["ups","pdu","it_load","power"],"exclude":["power_factor"]}}],"external":["Design capacity per room"],"logic":["95th percentile load per room; linear trend; months until 80% of capacity."],"output":"Headroom and months-to-limit per room.","runs":"Weekly","history":"3 months"},{"id":"workload-cooling-placement","domain":"datacentres","title":"Workload placement for power and cooling","method":["optimisation"],"solver":"scripts/optimise/budget_select.py","why":"Placing new loads across rooms within power, cooling and redundancy limits is a bin-packing problem.","slots":[{"key":"it","label":"IT load per room or rack","required":true,"match":{"name":["ups","pdu","it_load","power"],"exclude":["power_factor"]}}],"external":["Rack and room limits","Redundancy rules","New load requests"],"logic":["Solve: place requests to keep every room under its limits and balance headroom."],"output":"Placement recommendation per request.","runs":"On request","history":"None"},{"id":"sensor-data-quality","domain":"general","title":"Sensor and data-quality checks","method":["rules"],"why":"Flatline, range, spike and gap checks are fixed comparisons; every other use case depends on them.","slots":[{"key":"measurements","label":"Analog measurements","required":true,"match":{"name":["_sensor","temperature","pressure","\\bflow\\b","\\blevel\\b","humidity","\\bspeed\\b","\\bcurrent\\b","voltage","vibration","\\bpower\\b"],"units":[".*[a-z%°³²].*"],"exclude":["setpoint","\\bsp\\b","alarm","fault","status","command","\\bcmd\\b"]}},{"key":"comms","label":"Device online or communication status","required":false,"match":{"name":["online_status","connectivity_status","comm_status","comms","communication","\\boffline\\b"]}}],"external":["Physical range per point type (e.g. 0–100 % for valves)","Expected reporting interval"],"logic":["Flatline: no change beyond a small band for a set time (e.g. 6 h) while related equipment runs.","Out of range: value outside the physical range for its type or units.","Spike: step change larger than a set rate between two samples.","Gap: no new value for more than 3 reporting intervals, or the device reports offline.","Score each point and rank the worst; exclude bad data from every other use case."],"output":"Data-quality flag and score per point; weekly list of suspect sensors.","runs":"Hourly checks; weekly list","history":"None"},{"id":"short-cycling","domain":"general","title":"Equipment short-cycling","method":["rules"],"why":"Counting starts from run-status changes is arithmetic; no model needed.","slots":[{"key":"run","label":"Run status of any motor, pump, compressor, fan or unit","required":true,"match":{"name":["run_status","\\brun_(state|feedback|fb)\\b","\\brunning_status\\b","on_off_status"],"exclude":["schedule","command","\\bcmd\\b"]}},{"key":"power","label":"Power (to size the extra wear and energy)","required":false,"match":{"name":["power_sensor","_power$","\\bkw\\b"],"units":["[km]?w"]}}],"external":["Manufacturer limit on starts per hour and minimum on and off times"],"logic":["Count off-to-on changes per asset per hour; flag above the manufacturer limit (e.g. 6 starts per hour).","Flag on or off periods shorter than the minimum time (e.g. 5 min).","Rank assets by starts per day; the agent explains the likely cause (oversizing, tight deadband, control hunting)."],"output":"Short-cycling alerts per asset with starts per hour and the worst periods.","runs":"Daily","history":"None"},{"id":"oee","domain":"industrial","title":"Overall equipment effectiveness (OEE)","method":["rules"],"why":"Counts and states from the line; arithmetic.","slots":[{"key":"state","label":"Machine running state","required":true,"match":{"name":["run_status","running","machine_state","state"]}},{"key":"count","label":"Good or total count","required":true,"match":{"name":["count","produced","good","units"]}},{"key":"reject","label":"Reject or scrap count","required":false,"match":{"name":["reject","scrap","bad"]}}],"external":["Ideal cycle time per product","Planned production time"],"logic":["Availability = run time ÷ planned time; performance = ideal cycle × count ÷ run time; quality = good ÷ total."],"output":"OEE per line and shift, with the largest loss category.","runs":"Per shift","history":"None"},{"id":"spc-control-charts","domain":"industrial","title":"Statistical process control","method":["statistics"],"why":"Control limits from process history; rule violations flag drift before spec limits are reached.","slots":[{"key":"variable","label":"Process variable (temperature","pressure":null,"flow":null,"weight…)":null,"required":true,"match":{"name":["temperature","pressure","flow","weight","level","thickness"]}}],"logic":["Control limits = mean ± 3σ from a stable period; apply run rules to each new subgroup."],"output":"Out-of-control alerts per variable, with the rule that fired.","runs":"Per sample","history":"25+ subgroups"},{"id":"energy-per-unit","domain":"industrial","title":"Energy per unit produced","method":["statistics"],"why":"Energy against production with a regression baseline; no ML.","slots":[{"key":"energy","label":"Energy","required":true,"match":{"name":["energy","kwh","power"],"exclude":["power_factor"]}},{"key":"count","label":"Production count","required":true,"match":{"name":["count","produced","units","tonnage"]}}],"logic":["Fit energy = a + b × production; flag days above the expected band."],"output":"Energy per unit and deviation by line and day.","runs":"Daily","history":"3 months"},{"id":"compressed-air-leaks","domain":"industrial","title":"Compressed air leak detection","method":["statistics"],"why":"Flow or compressor load when production is stopped is mostly leakage.","slots":[{"key":"air","label":"Compressed air flow or compressor power","required":true,"match":{"name":["air_flow","compressor","compressed"]}},{"key":"state","label":"Production state","required":false,"match":{"name":["run_status","state"]}}],"logic":["Off-shift baseline flow; flag rising trend; cost = leak flow × specific power × hours × tariff."],"output":"Weekly leak cost estimate and trend.","runs":"Weekly","history":"4 weeks"},{"id":"production-scheduling","domain":"industrial","title":"Production scheduling","method":["optimisation"],"solver":"scripts/optimise/schedule_maintenance.py","why":"Sequencing orders on machines with changeovers, due dates and capacity is a scheduling optimisation.","slots":[{"key":"state","label":"Machine state","required":true,"match":{"name":["run_status","state","machine"]}}],"external":["Orders with due dates","Routings and cycle times","Changeover matrix","Shifts"],"logic":["Solve: assign and sequence jobs to machines; minimise lateness and changeovers within shift capacity."],"output":"Sequenced schedule per machine, with late orders flagged.","runs":"Per shift","history":"None"},{"id":"vibration-predictive-maintenance","domain":"industrial","title":"Vibration-based predictive maintenance","method":["ml"],"why":"Severity thresholds are rules; predicting failure time from spectra needs a trained model.","slots":[{"key":"vibration","label":"Vibration","required":true,"match":{"name":["vibration","velocity_rms","acceleration"]}}],"logic":["Rules first (ISO severity zones); train a degradation model once failures are recorded."],"output":"Health and predicted failure window per asset.","runs":"Hourly","history":"Failure history"},{"id":"peak-demand-alerts","domain":"utilities","title":"Peak demand alerts","method":["rules"],"why":"Rolling demand against the monthly peak and contracted limit.","slots":[{"key":"demand","label":"Active power demand","required":true,"match":{"name":["power_demand","active_power","demand","power"],"exclude":["power_factor"]}},{"key":"peak","label":"Peak demand register","required":false,"match":{"name":["peak"]}}],"external":["Contracted demand limit","Demand interval (e.g. 15 or 30 min)"],"logic":["Project the current demand interval's average; alert when it would exceed the month's peak or the limit."],"output":"Alerts with minutes left and kW to shed.","runs":"Every minute","history":"None"},{"id":"power-quality","domain":"utilities","title":"Power factor and voltage monitoring","method":["rules"],"why":"Measured values against fixed bands.","slots":[{"key":"pf","label":"Power factor","required":true,"match":{"name":["power_factor"]}},{"key":"voltage","label":"Voltage","required":false,"match":{"name":["voltage"]}}],"logic":["Flag power factor below the tariff limit and voltage outside its band; estimate penalty cost."],"output":"Daily power-quality report with penalty estimate.","runs":"Every 15 min","history":"None"},{"id":"solar-performance-ratio","domain":"utilities","title":"Solar performance ratio","method":["statistics"],"why":"Actual yield against expected yield from irradiance and rated power.","slots":[{"key":"generation","label":"Solar energy or power","required":true,"match":{"name":["energy_generated","generated","active_power","solar"]}},{"key":"irradiance","label":"Irradiance","required":false,"match":{"name":["irradiance"]}}],"external":["Plant rating","Irradiance from a weather API if no sensor"],"logic":["Performance ratio = actual kWh ÷ (rated kWp × irradiation in kWh/m²); flag inverters below their peers."],"output":"Daily and monthly performance ratio per plant and inverter.","runs":"Daily","history":"None"},{"id":"load-shifting-tariff","domain":"utilities","title":"Load shifting and battery dispatch against tariff","method":["optimisation"],"solver":"scripts/optimise/budget_select.py","why":"Deciding when to charge, discharge or shift flexible load under tariff and capacity limits is an optimisation.","slots":[{"key":"demand","label":"Site demand","required":true,"match":{"name":["power_demand","active_power","demand"],"exclude":["power_factor"]}},{"key":"battery","label":"Battery state of charge","required":false,"match":{"name":["state_of_charge","soc","battery"]}}],"external":["Tariff by hour","Battery capacity and power limits","Flexible loads"],"logic":["Day-ahead load profile from weekday averages (statistics).","Solve: hourly charge, discharge and shift decisions to minimise cost within limits."],"output":"Day-ahead dispatch plan with expected saving.","runs":"Daily","history":"4 weeks"},{"id":"energy-load-forecast","domain":"utilities","title":"Short-term load forecast","method":["ml"],"why":"Accurate hourly forecasts need a trained model with weather and calendar inputs.","slots":[{"key":"energy","label":"Energy or demand history","required":true,"match":{"name":["energy","demand","power"],"exclude":["power_factor"]}}],"logic":["Train a time-series model per feeder or site; retrain regularly."],"output":"Hourly load forecast.","runs":"Hourly","history":"12 months"},{"id":"dma-water-balance","domain":"water","title":"District metered area water balance (non-revenue water)","method":["rules"],"why":"Inflow minus billed or metered consumption is arithmetic.","slots":[{"key":"inflow","label":"DMA inlet flow or volume","required":true,"match":{"name":["inlet_flow","inflow","flow_rate","cumulative_volume","volume"]}},{"key":"consumption","label":"Customer or sub-meter volumes","required":false,"match":{"name":["cumulative_water_volume","consumption","sub_meter"]}}],"external":["DMA boundaries","Billing volumes"],"logic":["Daily per DMA: losses = inflow − sum of metered consumption; % of inflow.","Flag DMAs whose loss share rises above a set level for 3 days."],"output":"Loss per DMA (m³/day and %), ranked.","runs":"Daily","history":"None"},{"id":"minimum-night-flow","domain":"water","title":"Leak detection from minimum night flow","method":["statistics"],"why":"Night flow when legitimate use is lowest; a rising trend against its own baseline signals leakage.","slots":[{"key":"flow","label":"DMA or zone flow rate","required":true,"match":{"name":["flow_rate","flow"]}}],"logic":["Minimum flow between 02:00 and 04:00 per day and DMA.","Baseline = rolling 30-day median; flag a sustained rise (e.g. +20% for 3 nights)."],"output":"Leak alerts per DMA with the night-flow trend.","runs":"Daily","history":"30 days"},{"id":"burst-detection","domain":"water","title":"Burst detection from flow and pressure","method":["statistics"],"why":"A sudden flow rise with a pressure drop against the same hour's profile; no training needed.","slots":[{"key":"flow","label":"Flow rate","required":true,"match":{"name":["flow_rate","flow"]}},{"key":"pressure","label":"Line pressure","required":false,"match":{"name":["pressure"]}},{"key":"alarm","label":"High-flow alarm","required":false,"match":{"name":["high_flow","burst"]}}],"logic":["Expected flow and pressure per hour-of-week from the last 4–8 weeks.","Flag when flow is above and pressure below their bands for 15 min or more."],"output":"Burst alerts with location and estimated loss rate.","runs":"Every 15 min","history":"4–8 weeks"},{"id":"tank-level-management","domain":"water","title":"Reservoir and tank level management","method":["rules"],"why":"Levels against high and low bands, and time to empty or overflow at current net flow.","slots":[{"key":"level","label":"Tank level","required":true,"match":{"name":["tank_level","water_level","level","reservoir"]}},{"key":"flow","label":"Inlet or outlet flow","required":false,"match":{"name":["flow"]}}],"logic":["Time to low level = volume above low band ÷ net outflow; warn when under a set number of hours."],"output":"Warnings with hours to empty or overflow.","runs":"Every 15 min","history":"None"},{"id":"pump-scheduling-tariff","domain":"water","title":"Pump scheduling against tariff and tank limits","method":["optimisation"],"solver":"scripts/optimise/schedule_maintenance.py","why":"Choosing pump on/off hours to keep tanks within limits at the lowest energy cost is a scheduling optimisation.","slots":[{"key":"pump","label":"Pump run status or command","required":true,"match":{"name":["pump.*run","run_status","pump.*command"],"equipment":["pump"]}},{"key":"level","label":"Tank level","required":true,"match":{"name":["level"]}},{"key":"power","label":"Pump power","required":false,"match":{"name":["power"],"exclude":["power_factor"]}}],"external":["Tariff by hour","Tank volumes and limits","Pump capacities","Demand profile"],"logic":["Hourly demand profile per zone (statistics).","Solve: pump hours so tank levels stay within limits; minimise energy cost; respect minimum run and rest times."],"output":"24-hour pump schedule for approval, with expected cost and tank trajectory.","runs":"Daily","history":"4 weeks"},{"id":"pressure-management","domain":"water","title":"Pressure management by zone","method":["rules"],"why":"Night pressure above the service minimum adds leakage; a fixed reduction profile per zone answers it.","slots":[{"key":"pressure","label":"Zone or PRV outlet pressure","required":true,"match":{"name":["pressure"]}},{"key":"prv","label":"PRV setpoint (writable)","required":false,"writable":true,"match":{"name":["setpoint"]}}],"logic":["Compare night pressure with the service minimum at the critical point; recommend a lower night setpoint within limits."],"output":"Setpoint recommendations per zone for operator approval.","runs":"Daily","history":"2 weeks"},{"id":"water-demand-forecast","domain":"water","title":"Water demand forecast","method":["ml"],"why":"Accurate day-ahead demand needs a trained model with weather and calendar inputs.","slots":[{"key":"flow","label":"Flow or volume history","required":true,"match":{"name":["flow","volume"]}}],"logic":["Train a time-series model per zone; retrain regularly."],"output":"Day-ahead demand per zone.","runs":"Daily","history":"12 months"}]},"abbrev":{"sat":"supply_air_temperature","dat":"discharge_air_temperature","rat":"return_air_temperature","mat":"mixed_air_temperature","oat":"outside_air_temperature","oa":"outside_air","ra":"return_air","sa":"supply_air","chwst":"chilled_water_supply_temperature","chws":"chilled_water_supply_temperature","chwrt":"chilled_water_return_temperature","chwr":"chilled_water_return_temperature","zt":"zone_air_temperature","znt":"zone_air_temperature","rmt":"room_temperature","sp":"setpoint","stpt":"setpoint","spt":"setpoint","temp":"temperature","tmp":"temperature","kw":"power_kw","kwh":"energy_kwh","rh":"humidity","hum":"humidity","dp":"differential_pressure","chwv":"cooling_valve","clgvlv":"cooling_valve","vlv":"valve","dmpr":"damper","oad":"outdoor_air_damper","spd":"speed","cmd":"command","sts":"status","stat":"status","run":"run_status","flt":"fault_status","alm":"alarm","occ":"occupancy","sched":"schedule","hrs":"run_hours","vfd":"vfd_speed","pf":"power_factor","flow":"flow_rate","lvl":"level","press":"pressure"},"compound":"^(sat|dat|rat|mat|oat|chws|chwst|zt|znt|rmt)(sp|stpt|spt)$","domains":null}</script>
+<script>
+'use strict';
+/* ================= data & state ================= */
+const RAW = JSON.parse(document.getElementById('pp-data').textContent);
+const LIB = RAW.library || {usecases: []};
+const RANK = {rules: 1, statistics: 2, optimisation: 3, ml: 4};
+const METHODS = ['rules', 'statistics', 'optimisation', 'ml', 'genai'];
+const MLABEL = {rules: 'Rules', statistics: 'Statistics', optimisation: 'Optimisation', ml: 'Machine learning', genai: 'GenAI'};
+const MCOLOR = m => getComputedStyle(document.documentElement).getPropertyValue('--r-' + m).trim() || '#2E5E8C';
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+
+function fresh() {
+  const a = RAW.assessment || {items: []};
+  return {project: a.project || 'Untitled project', policy: (a.policy && a.policy.max_method) || 'ml', capacity: a.capacity ?? '',
+          source: (RAW.points && RAW.points.source) || '', points: (RAW.points && RAW.points.points) || [],
+          items: JSON.parse(JSON.stringify(a.items || [])), architecture: a.architecture || []};
+}
+const KEY = 'pointproof:' + ((RAW.assessment && RAW.assessment.project) || '') + ':' + ((RAW.points && RAW.points.source) || '');
+let S = (() => { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.items) return s; } catch (e) {} return fresh(); })();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+let F = {verdict: 'all', group: null, method: null, q: '', pq: '', pfilter: 'all', domains: null, sel: null};
+
+/* ================= text normalisation (port of textnorm.py) ================= */
+const ABBREV = RAW.abbrev || {sat:'supply_air_temperature',dat:'discharge_air_temperature',rat:'return_air_temperature',mat:'mixed_air_temperature',oat:'outside_air_temperature',oa:'outside_air',ra:'return_air',sa:'supply_air',
+  chwst:'chilled_water_supply_temperature',chws:'chilled_water_supply_temperature',chwrt:'chilled_water_return_temperature',chwr:'chilled_water_return_temperature',
+  zt:'zone_air_temperature',znt:'zone_air_temperature',rmt:'room_temperature',sp:'setpoint',stpt:'setpoint',spt:'setpoint',temp:'temperature',tmp:'temperature',
+  kw:'power_kw',kwh:'energy_kwh',rh:'humidity',hum:'humidity',dp:'differential_pressure',chwv:'cooling_valve',clgvlv:'cooling_valve',vlv:'valve',dmpr:'damper',oad:'outdoor_air_damper',
+  spd:'speed',cmd:'command',sts:'status',stat:'status',run:'run_status',flt:'fault_status',alm:'alarm',occ:'occupancy',sched:'schedule',hrs:'run_hours',vfd:'vfd_speed',
+  pf:'power_factor',flow:'flow_rate',lvl:'level',press:'pressure'};
+const COMPOUND = new RegExp(RAW.compound || '^(sat|dat|rat|mat|oat|chws|chwst|zt|znt|rmt)(sp|stpt|spt)$');
+function normalise(text) {
+  const t = String(text || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/(?<![A-Za-z])[kMG](?:Wh|W|VAr|VAh|VA)(?![a-z])/g, m => m.toLowerCase()).replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+  const out = [];
+  for (let tok of t.split(/[^a-z0-9]+/).filter(Boolean)) {
+    if (/^(ahu|fcu|vav|ch|mtr|mdb|z|p|b)\d+$/.test(tok)) tok = tok.replace(/\d+$/, '');
+    const m = tok.match(COMPOUND);
+    if (m) out.push(ABBREV[m[1]], 'setpoint'); else out.push(ABBREV[tok] || tok);
+  }
+  return out.join('_').replace(/run_status_(hours|time)/g, 'run_$1');
+}
+const words = t => normalise(t).replace(/_/g, ' ');
+const ptexts = p => [words(p.name), words(p.description)].filter(Boolean);
+const RX = {}, rx = pat => RX[pat] || (RX[pat] = new RegExp(String(pat).toLowerCase().replace(/_/g, ' ')));
+const anyMatch = (pats, texts) => (pats || []).some(x => texts.some(t => rx(x).test(t)));
+function slotMatch(slot, p) {   // same rules as match_usecases.py
+  const m = slot.match || {}, texts = ptexts(p), units = String(p.units || '').trim().toLowerCase();
+  const byName = anyMatch(m.name, texts), byUnits = !!units && (m.units || []).some(u => new RegExp('^(?:' + String(u).toLowerCase() + ')$').test(units));
+  if (!(byName || byUnits) || anyMatch(m.exclude, texts)) return false;
+  if (m.equipment) { const raw = `${p.system || ''} ${p.equipment || ''} ${p.asset || ''}`; if (!anyMatch(m.equipment, [words(raw), raw.toLowerCase()])) return false; }
+  if (slot.writable && p.rw && !p.rw.includes('W')) return false;
+  return true;
+}
+function matchLibrary() { return matchAll().filter(r => !F.domains || F.domains.has(r.u.domain)); }
+function matchAll() {
+  return LIB.usecases.map(u => {
+    const slots = u.slots.map(s => ({...s, ids: S.points.filter(p => slotMatch(s, p)).map(p => p.id)}));
+    const req = slots.filter(s => s.required), filled = req.filter(s => s.ids.length);
+    return {u, slots, status: req.length && filled.length === req.length ? 'ready' : filled.length ? 'partial' : 'blocked',
+            missing: req.filter(s => !s.ids.length).map(s => s.label)};
+  });
+}
+
+/* ================= validation & coverage ================= */
+const byId = () => new Map(S.points.map(p => [String(p.id), p]));
+function issues(it, idx) {
+  const e = [];
+  if (it.verdict !== 'applicable') return e;
+  const ms = Array.isArray(it.method) ? it.method : (it.method ? [it.method] : []);
+  if (!ms.length) e.push('No method selected');
+  ms.forEach(m => { if (RANK[m] && RANK[m] > RANK[S.policy]) e.push(`${MLABEL[m]} is above your policy (${MLABEL[S.policy]})`); });
+  if (!(it.points || []).length && !it.no_points_reason) e.push('No points and no reason given');
+  (it.points || []).forEach(pt => { const p = idx.get(String(pt.id));
+    if (!p) e.push(`Point #${pt.id} is not in the points list`);
+    else if (pt.name && pt.name !== (p.name || p.description)) e.push(`Point #${pt.id} is "${p.name || p.description}", not "${pt.name}"`); });
+  return e;
+}
+const topRung = it => { const ms = it.method || []; let best = null; ms.forEach(m => { if (RANK[m] && (!best || RANK[m] > RANK[best])) best = m; }); return best || (ms.includes('genai') ? 'genai' : null); };
+function coverage() {
+  const idx = byId(), app = S.items.filter(i => i.verdict === 'applicable');
+  const used = new Set(app.flatMap(i => (i.points || []).map(p => String(p.id))).filter(id => idx.has(id)));
+  const ladder = Object.fromEntries(METHODS.map(m => [m, 0])); app.forEach(i => { const r = topRung(i); if (r) ladder[r]++; });
+  const groups = {}; S.items.forEach(i => { const g = i.group || 'Ungrouped'; groups[g] = groups[g] || [0, 0]; groups[g][1]++; if (i.verdict === 'applicable') groups[g][0]++; });
+  const systems = {}; S.points.forEach(p => { const s = p.system || '(no system)'; systems[s] = systems[s] || [0, 0]; systems[s][1]++; if (used.has(String(p.id))) systems[s][0]++; });
+  const errs = S.items.map(i => issues(i, idx));
+  return {app, used, ladder, groups, systems, errs, nErr: errs.reduce((a, e) => a + e.length, 0)};
+}
+
+/* ================= rendering ================= */
+const mchips = ms => (ms || []).map(m => `<span class="m" style="background:${MCOLOR(m)}">${MLABEL[m] || esc(m)}</span>`).join('');
+function render() {
+  save();
+  const C = coverage(), N = S.items.length, A = C.app.length;
+  $('#projName').value = S.project;
+  $('#srcLine').textContent = `${S.points.length} points from ${S.source || 'no points list'} · ${N} requirements`;
+  $('#policy').value = S.policy; $('#capacity').value = S.capacity;
+  const vb = $('#valBadge'); const refs = C.app.reduce((a, i) => a + (i.points || []).length, 0);
+  vb.className = 'badge ' + (C.nErr ? 'bad' : 'ok');
+  vb.textContent = C.nErr ? `${C.nErr} issue${C.nErr > 1 ? 's' : ''} to fix` : `All ${refs} point references proven`;
+  // summary
+  $('#kPct').innerHTML = `${pct(A, N)}%<small>${A} of ${N}</small>`;
+  $('#kSplit').style.width = (N ? 100 * A / N : 0) + '%';
+  $('#kLine').textContent = `${A} applicable, ${N - A} out of scope · ${C.used.size} of ${S.points.length} points used (${pct(C.used.size, S.points.length)}%)`;
+  const cap = parseInt(S.capacity, 10);
+  $('#kCap').className = 'cap' + (cap && A > cap ? ' over' : '');
+  $('#kCap').innerHTML = cap ? `Team capacity: <b>${A} of ${cap}</b> items${A > cap ? ` — ${A - cap} over` : ''}<div class="track"><div class="fill" style="width:${Math.min(100, 100 * A / cap)}%"></div></div>` : '';
+  const maxL = Math.max(1, ...Object.values(C.ladder));
+  $('#ladder').innerHTML = METHODS.map(m => { const locked = RANK[m] && RANK[m] > RANK[S.policy];
+    return `<div class="rung ${locked ? 'locked' : ''}" title="${locked ? 'Above your delivery policy' : ''}"><span class="rung-l"><span class="dot" style="background:${MCOLOR(m)}"></span>${MLABEL[m]}</span><span class="bar"><i style="width:${100 * C.ladder[m] / maxL}%;background:${MCOLOR(m)}"></i></span><b>${C.ladder[m]}</b></div>`; }).join('');
+  $('#byGroup').innerHTML = Object.entries(C.groups).sort((a, b) => b[1][1] - a[1][1]).map(([g, [a, t]]) =>
+    `<div class="hb"><span>${esc(g)}</span><span class="t"><i style="width:${100 * a / t}%"></i></span><span><b>${pct(a, t)}%</b> ${a}/${t}</span></div>`).join('') || '<span class="muted">No groups</span>';
+  // filters
+  $('#verdictChips').innerHTML = [['all', 'All'], ['applicable', 'Applicable'], ['out_of_scope', 'Out of scope'], ['issues', 'With issues']]
+    .map(([k, l]) => `<button class="chip" aria-pressed="${F.verdict === k}" data-verdict="${k}">${l}</button>`).join('');
+  $('#groupChips').innerHTML = Object.keys(C.groups).map(g => `<button class="chip" aria-pressed="${F.group === g}" data-group="${esc(g)}">${esc(g)}</button>`).join('');
+  $('#methodChips').innerHTML = METHODS.map(m => `<button class="chip" aria-pressed="${F.method === m}" data-method="${m}">${MLABEL[m]}</button>`).join('');
+  renderList(C); renderSuggest(); renderArch(C); renderPoints(C); renderGaps(C);
+  if (F.sel !== null) renderDrawer(F.sel, C);
+}
+function visible(i, k, C) {
+  if (F.verdict === 'issues' ? !C.errs[k].length : (F.verdict !== 'all' && i.verdict !== F.verdict)) return false;
+  if (F.group && (i.group || 'Ungrouped') !== F.group) return false;
+  if (F.method && !(i.method || []).includes(F.method)) return false;
+  if (F.q) { const hay = JSON.stringify(i).toLowerCase(); if (!hay.includes(F.q.toLowerCase())) return false; }
+  return true;
+}
+function renderList(C) {
+  const rows = S.items.map((i, k) => [i, k]).filter(([i, k]) => visible(i, k, C));
+  $('#reqs').innerHTML = rows.length ? rows.map(([i, k]) => {
+    const e = C.errs[k], n = (i.points || []).length, app = i.verdict === 'applicable';
+    const proof = !app ? '<span class="proof muted">—</span>' : e.length ? `<span class="proof bad">✗ ${e.length} issue${e.length > 1 ? 's' : ''}</span>` : `<span class="proof">✓ ${n} point${n === 1 ? '' : 's'} proven</span>`;
+    return `<div class="req ${app ? '' : 'out'} ${F.sel === k ? 'sel' : ''}" role="listitem" data-k="${k}" tabindex="0">
+      <span class="ref">${esc(i.ref)}</span>
+      <span><span class="t-title">${esc(i.title)}</span><br><span class="t-group">${esc(i.group || '')}${i.usecase ? ' · ' + esc(i.usecase) : ''}${!app && i.reason ? ' · ' + esc(i.reason) : ''}</span></span>
+      <span class="c-m mchips">${app ? mchips(i.method) : ''}</span>
+      <span class="c-proof">${proof}</span>
+      <span class="toggle" role="group" aria-label="Verdict for ${esc(i.ref)}"><button data-set="applicable" data-k="${k}" aria-pressed="${app}">In</button><button class="outb" data-set="out_of_scope" data-k="${k}" aria-pressed="${!app}">Out</button></span>
+    </div>`; }).join('') : '<div class="empty">No requirements match. Add one, or use the Suggest tab.</div>';
+}
+function renderDrawer(k, C) {
+  const i = S.items[k]; if (!i) { closeDrawer(); return; }
+  const idx = byId(), e = (C || coverage()).errs[k];
+  $('#dTitle').textContent = `${i.ref} · ${i.title}`;
+  const pts = (i.points || []).map((pt, j) => { const p = idx.get(String(pt.id)); const ok = p && (!pt.name || pt.name === (p.name || p.description));
+    return `<div class="prow"><span style="color:${ok ? 'var(--ok)' : 'var(--bad)'}">${ok ? '✓' : '✗'}</span><span class="mono">#${esc(pt.id)}</span><span><span class="mono">${esc(pt.name || (p && (p.name || p.description)) || '')}</span>${p ? `<br><span class="muted">${esc(p.equipment || p.system)}${p.rw ? ' · ' + esc(p.rw) : ''}</span>` : ''}</span><button class="x" data-rmpt="${j}" aria-label="Remove point">×</button></div>`; }).join('');
+  const txt = (f, l, ta) => `<label>${l}${ta ? `<textarea data-f="${f}">${esc(i[f] || '')}</textarea>` : `<input data-f="${f}" value="${esc(i[f] || '')}">`}</label>`;
+  $('#dBody').innerHTML = `${e.length ? `<div class="err">${e.map(esc).join('<br>')}</div>` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${txt('ref', 'Ref')}${txt('group', 'Group')}</div>
+    ${txt('title', 'Requirement')}
+    <label>Verdict<span class="toggle"><button data-set="applicable" data-k="${k}" aria-pressed="${i.verdict === 'applicable'}">Applicable</button><button class="outb" data-set="out_of_scope" data-k="${k}" aria-pressed="${i.verdict !== 'applicable'}">Out of scope</button></span></label>
+    <label>Method<span class="mpick">${METHODS.map(m => `<label><input type="checkbox" data-m="${m}" ${(i.method || []).includes(m) ? 'checked' : ''}>${MLABEL[m]}</label>`).join('')}</span></label>
+    ${i.verdict === 'applicable' ? '' : txt('reason', 'Why it is out of scope', true)}
+    ${txt('why', 'Why this method is enough', true)}
+    <label>Input points (${(i.points || []).length})<div class="plist">${pts || '<div class="prow"><span></span><span></span><span class="muted">No points yet</span></div>'}</div>
+      <input list="ptlist" id="addPt" placeholder="Add a point: type an id, tag or description"><datalist id="ptlist">${S.points.slice(0, 3000).map(p => `<option value="#${esc(p.id)} ${esc(p.name || p.description)}">${esc(p.equipment || p.system)}</option>`).join('')}</datalist></label>
+    ${txt('other_inputs', 'Other inputs (master data, services)', true)}
+    <label>Logic (one step per line)<textarea data-f="logic" style="min-height:90px">${esc((i.logic || []).join('\n'))}</textarea></label>
+    ${txt('output', 'Output to the platform', true)}${txt('example', 'Example output (illustrative values)', true)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${txt('runs', 'Runs')}${txt('history', 'History needed')}</div>
+    <label>Missing data (one per line)<textarea data-f="missing">${esc((i.missing || []).join('\n'))}</textarea></label>
+    <button class="btn" id="delItem" style="align-self:flex-start;color:var(--bad)">Delete requirement</button>`;
+  $('#drawer').classList.add('open');
+}
+function closeDrawer() { F.sel = null; $('#drawer').classList.remove('open'); $$('.req.sel').forEach(r => r.classList.remove('sel')); }
+function renderSuggest() {
+  const doms = [...new Set(LIB.usecases.map(u => u.domain))];
+  if (!F.domains) { const used = new Set(S.items.map(i => (LIB.usecases.find(u => u.id === i.usecase) || {}).domain).filter(Boolean));
+    F.domains = new Set(RAW.domains || (used.size ? [...used] : doms)); }
+  const all = matchAll();
+  $('#domainChips').innerHTML = doms.map(d => `<button class="chip" aria-pressed="${F.domains.has(d)}" data-dom="${d}">${d} · ${all.filter(r => r.u.domain === d && r.status === 'ready').length} ready</button>`).join('');
+  const have = new Set(S.items.map(i => i.usecase));
+  const res = all.filter(r => F.domains.has(r.u.domain)).sort((a, b) => ['ready', 'partial', 'blocked'].indexOf(a.status) - ['ready', 'partial', 'blocked'].indexOf(b.status));
+  $('#sugList').innerHTML = res.map(r => `<div class="sug"><span class="st ${r.status}">${r.status.toUpperCase()} · ${esc(r.u.domain)}</span><b>${esc(r.u.title)}</b>
+    <span class="mchips">${mchips(r.u.method)}</span>
+    <span class="muted" style="font-size:12.5px">${esc(r.u.why || '')}</span>
+    <span style="font-size:12px">${r.slots.map(s => `${s.ids.length ? '✓' : (s.required ? '✗' : '○')} ${esc(s.label)} <span class="muted">(${s.ids.length})</span>`).join('<br>')}</span>
+    ${have.has(r.u.id) ? '<span class="muted" style="font-size:12px">Already in the assessment</span>' : `<button class="btn" data-addu="${esc(r.u.id)}" ${r.status === 'blocked' ? 'disabled' : ''}>Add as requirement</button>`}</div>`).join('');
+}
+function addFromLibrary(id) {
+  const r = matchLibrary().find(x => x.u.id === id); if (!r) return;
+  const idx = byId(), pts = []; const seen = new Set();
+  r.slots.forEach(s => s.ids.slice(0, s.required ? 4 : 2).forEach(pid => { if (!seen.has(pid)) { seen.add(pid); const p = idx.get(String(pid)); pts.push({id: p.id, name: p.name || p.description}); } }));
+  const n = S.items.length + 1; let ref = 'R' + n; while (S.items.some(i => i.ref === ref)) ref += "'";
+  const u = r.u, over = u.method.some(m => RANK[m] && RANK[m] > RANK[S.policy]);
+  S.items.push({ref, title: u.title, group: u.domain.charAt(0).toUpperCase() + u.domain.slice(1), usecase: u.id, verdict: over ? 'out_of_scope' : 'applicable', method: [...u.method], why: u.why || '',
+    points: pts, other_inputs: (u.external || []).join('; '), logic: u.logic || [], output: u.output || '', example: '', runs: u.runs || '', history: u.history || '',
+    missing: r.missing});
+  render();
+}
+/* architecture */
+function renderArch(C) { $('#arch').innerHTML = archSVG(C); }
+function wrap(text, n) { const w = String(text).split(/\s+/), out = []; let l = ''; w.forEach(x => { if ((l + ' ' + x).trim().length > n) { out.push(l.trim()); l = x; } else l += ' ' + x; }); if (l.trim()) out.push(l.trim()); return out; }
+function archSVG(C) {
+  const sys = Object.entries(C.systems).sort((a, b) => b[1][0] / b[1][1] - a[1][0] / a[1][1] || b[1][1] - a[1][1]).slice(0, 12);
+  const rungs = METHODS.filter(m => C.app.some(i => (i.method || []).includes(m)));
+  const X = [20, 270, 520, 820], W = [220, 220, 270, 200];
+  let y0 = 46, parts = [];
+  const box = (x, y, w, h, title, lines, opt = {}) => {
+    parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${opt.fill || '#fff'}" stroke="${opt.stroke || '#9AA5AF'}" stroke-width="${opt.sw || 1}"/>`);
+    parts.push(`<text x="${x + 10}" y="${y + 18}" font-family="IBM Plex Sans,sans-serif" font-weight="600" font-size="12.5" fill="#1C2630">${esc(title)}</text>`);
+    lines.forEach((l, j) => parts.push(`<text x="${x + 10}" y="${y + 34 + 14 * j}" font-family="IBM Plex Sans,sans-serif" font-size="11" fill="#56626D">${esc(l)}</text>`));
+  };
+  const head = (x, t) => parts.push(`<text x="${x}" y="28" font-family="Barlow Semi Condensed,sans-serif" font-weight="600" font-size="15" fill="#56626D">${t}</text>`);
+  head(X[0], 'Sources (points used / total)'); head(X[1], 'Platform and data access'); head(X[2], 'Engines'); head(X[3], 'Outputs and approval');
+  let y = y0; sys.forEach(([s, [u, t]]) => { box(X[0], y, W[0], 38, s, [`${u} of ${t} points used (${pct(u, t)}%)`], u ? {fill: '#E3EAF2', stroke: '#2E5E8C'} : {}); y += 46; });
+  const hSrc = y;
+  box(X[1], y0, W[1], 70, 'Historian / SCADA / BMS', ['Values with quality flags,', 'alarms and events']);
+  box(X[1], y0 + 84, W[1], 70, 'Read-only data access', ['Quality checks, analytics store,', 'point-to-asset mapping']);
+  box(X[1], y0 + 168, W[1], 56, 'Master data and services', ['Hierarchy, tariffs, constraints']);
+  y = y0; const eTop = [];
+  rungs.forEach(m => { const refs = C.app.filter(i => (i.method || []).includes(m)).map(i => i.ref); const lines = wrap(refs.join(', '), 40);
+    const h = 26 + 14 * lines.length + 10; box(X[2], y, W[2], h, `${MLABEL[m]} (${refs.length})`, lines, {stroke: MCOLOR(m), sw: 1.6}); eTop.push(y + h / 2); y += h + 12; });
+  if (!rungs.length) { box(X[2], y, W[2], 46, 'No applicable items yet', ['Toggle requirements to In']); y += 58; }
+  const hEng = y;
+  box(X[3], y0, W[3], 56, 'AI results to the platform', ['Tags, KPIs, reports']);
+  box(X[3], y0 + 72, W[3], 56, 'Recommendation queue', ['Setpoints, schedules, routes']);
+  box(X[3], y0 + 144, W[3], 46, 'Operator approval', [], {fill: '#E3EAF2', stroke: '#2E5E8C', sw: 1.6});
+  box(X[3], y0 + 206, W[3], 46, 'Platform executes', ['Writes R/W points or work orders']);
+  const H = Math.max(hSrc, hEng, y0 + 270) + 10;
+  const arr = (d, acc) => parts.push(`<path d="${d}" fill="none" stroke="${acc ? '#2E5E8C' : '#8E99A3'}" stroke-width="${acc ? 1.8 : 1.3}" marker-end="url(#${acc ? 'ma' : 'mg'})"/>`);
+  arr(`M${X[0] + W[0]} ${y0 + 19}H${X[1]}`); arr(`M${X[1] + W[1] / 2} ${y0 + 70}V${y0 + 84}`); arr(`M${X[1] + W[1] / 2} ${y0 + 168}V${y0 + 154}`);
+  eTop.forEach(ey => arr(`M${X[1] + W[1]} ${y0 + 119}C${X[1] + W[1] + 20} ${y0 + 119} ${X[2] - 20} ${ey} ${X[2]} ${ey}`));
+  if (eTop.length) { arr(`M${X[2] + W[2]} ${eTop[0]}C${X[3] - 18} ${eTop[0]} ${X[3] - 18} ${y0 + 28} ${X[3]} ${y0 + 28}`); arr(`M${X[2] + W[2]} ${eTop[eTop.length - 1]}C${X[3] - 18} ${eTop[eTop.length - 1]} ${X[3] - 18} ${y0 + 100} ${X[3]} ${y0 + 100}`); }
+  arr(`M${X[3] + W[3] / 2} ${y0 + 128}V${y0 + 144}`, true); arr(`M${X[3] + W[3] / 2} ${y0 + 190}V${y0 + 206}`, true);
+  return `<svg viewBox="0 0 1040 ${H}" role="img" aria-label="Architecture generated from the applicable requirements"><defs>
+    <marker id="mg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8E99A3"/></marker>
+    <marker id="ma" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2E5E8C"/></marker></defs>${parts.join('')}</svg>`;
+}
+function renderPoints(C) {
+  const usedBy = {}; C.app.forEach(i => (i.points || []).forEach(p => { (usedBy[String(p.id)] = usedBy[String(p.id)] || []).push(i.ref); }));
+  $('#pFilter').innerHTML = [['all', 'All'], ['used', 'Used'], ['unused', 'Unused']].map(([k, l]) => `<button class="chip" aria-pressed="${F.pfilter === k}" data-pf="${k}">${l}</button>`).join('');
+  const rows = S.points.filter(p => { const u = !!usedBy[String(p.id)]; if (F.pfilter === 'used' && !u) return false; if (F.pfilter === 'unused' && u) return false;
+    if (F.pq) { const h = `${p.id} ${p.system} ${p.equipment} ${p.name} ${p.description} ${p.asset}`.toLowerCase(); if (!h.includes(F.pq.toLowerCase())) return false; } return true; });
+  $('#ptable').innerHTML = `<thead><tr><th>#</th><th>System</th><th>Equipment</th><th>Name</th><th>Description</th><th>R/W</th><th>Units</th><th>Used by</th></tr></thead><tbody>` +
+    rows.slice(0, 2000).map(p => `<tr class="${usedBy[String(p.id)] ? '' : 'unused'}"><td class="mono">${esc(p.id)}</td><td>${esc(p.system)}</td><td>${esc(p.equipment || p.asset)}</td><td class="mono">${esc(p.name)}</td><td>${esc(p.description)}</td><td>${esc(p.rw)}</td><td>${esc(p.units)}</td><td>${(usedBy[String(p.id)] || []).map(esc).join(', ')}</td></tr>`).join('') + '</tbody>';
+  $('#bySystem').innerHTML = Object.entries(C.systems).sort((a, b) => b[1][0] / b[1][1] - a[1][0] / a[1][1]).map(([s, [u, t]]) =>
+    `<div class="hb"><span>${esc(s)}</span><span class="t"><i style="width:${100 * u / t}%"></i></span><span><b>${pct(u, t)}%</b> ${u}/${t}</span></div>`).join('');
+}
+function renderGaps(C) {
+  const out = [];
+  S.items.forEach((i, k) => C.errs[k].forEach(e => out.push(`<div class="gap bad"><b>${esc(i.ref)}</b> ${esc(e)}</div>`)));
+  S.items.filter(i => i.verdict === 'applicable').forEach(i => (i.missing || []).forEach(m => out.push(`<div class="gap"><b>${esc(i.ref)}</b> needs: ${esc(m)}</div>`)));
+  const cap = parseInt(S.capacity, 10); if (cap && C.app.length > cap) out.unshift(`<div class="gap"><b>Capacity</b> ${C.app.length} applicable items against a limit of ${cap}. Move ${C.app.length - cap} out of scope or raise the limit.</div>`);
+  $('#gaps').innerHTML = out.join('') || '<div class="empty">No gaps: every applicable item is proven and nothing is missing.</div>';
+}
+
+/* ================= events ================= */
+document.addEventListener('click', ev => {
+  const t = ev.target.closest('button,.req'); if (!t) { if (!ev.target.closest('.menu')) $('#exportMenu').classList.remove('open'); return; }
+  if (t.dataset.set) { ev.stopPropagation(); const i = S.items[+t.dataset.k]; i.verdict = t.dataset.set; if (i.verdict === 'applicable' && !(i.method || []).length) i.method = ['rules']; render(); return; }
+  if (t.dataset.tab) { $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b === t)); $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + t.dataset.tab)); return; }
+  if (t.dataset.verdict) { F.verdict = t.dataset.verdict; render(); return; }
+  if (t.dataset.group !== undefined && t.classList.contains('chip')) { F.group = F.group === t.dataset.group ? null : t.dataset.group; render(); return; }
+  if (t.dataset.method) { F.method = F.method === t.dataset.method ? null : t.dataset.method; render(); return; }
+  if (t.dataset.pf) { F.pfilter = t.dataset.pf; render(); return; }
+  if (t.dataset.dom) { F.domains.has(t.dataset.dom) ? F.domains.delete(t.dataset.dom) : F.domains.add(t.dataset.dom); renderSuggest(); return; }
+  if (t.dataset.addu) { addFromLibrary(t.dataset.addu); return; }
+  if (t.dataset.rmpt !== undefined) { S.items[F.sel].points.splice(+t.dataset.rmpt, 1); render(); return; }
+  if (t.dataset.exp) { $('#exportMenu').classList.remove('open'); exporters[t.dataset.exp](); return; }
+  if (t.classList.contains('req')) { F.sel = +t.dataset.k; $$('.req').forEach(r => r.classList.toggle('sel', r === t)); renderDrawer(F.sel); return; }
+  if (t.id === 'dClose') closeDrawer();
+  if (t.id === 'delItem' && confirmDelete()) { S.items.splice(F.sel, 1); closeDrawer(); render(); }
+  if (t.id === 'btnAdd') { const n = S.items.length + 1; S.items.push({ref: 'R' + n, title: 'New requirement', group: '', verdict: 'out_of_scope', method: [], points: [], logic: []}); F.sel = S.items.length - 1; render(); }
+  if (t.id === 'btnExport') { const m = $('#exportMenu'); m.classList.toggle('open'); t.setAttribute('aria-expanded', m.classList.contains('open')); }
+  if (t.id === 'btnImport') $('#fileIn').click();
+  if (t.id === 'btnReset') { S = fresh(); try { localStorage.removeItem(KEY); } catch (e) {} closeDrawer(); render(); }
+});
+function confirmDelete() { const b = $('#delItem'); if (b.dataset.armed) return true; b.dataset.armed = 1; b.textContent = 'Click again to delete'; return false; }
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeDrawer(); if (ev.key === 'Enter' && ev.target.classList.contains('req')) ev.target.click(); });
+$('#dBody').addEventListener('input', ev => {
+  const i = S.items[F.sel]; if (!i) return; const f = ev.target.dataset.f;
+  if (f) { i[f] = (f === 'logic' || f === 'missing') ? ev.target.value.split('\n').filter(s => s.trim()) : ev.target.value; save(); renderListOnly(); }
+});
+$('#dBody').addEventListener('change', ev => {
+  const i = S.items[F.sel]; if (!i) return;
+  if (ev.target.dataset.m) { const m = ev.target.dataset.m; i.method = i.method || []; ev.target.checked ? i.method.includes(m) || i.method.push(m) : i.method = i.method.filter(x => x !== m); render(); }
+  if (ev.target.id === 'addPt') { const v = ev.target.value.trim(); const id = (v.match(/^#?(\S+)/) || [])[1]; const p = S.points.find(x => String(x.id) === id) || S.points.find(x => (x.name || x.description) === v);
+    if (p && !(i.points || []).some(x => String(x.id) === String(p.id))) { (i.points = i.points || []).push({id: p.id, name: p.name || p.description}); render(); } else ev.target.value = ''; }
+});
+function renderListOnly() { const C = coverage(); renderList(C); $('#dTitle').textContent = `${S.items[F.sel].ref} · ${S.items[F.sel].title}`; }
+$('#projName').addEventListener('input', e => { S.project = e.target.value; save(); });
+$('#policy').addEventListener('change', e => { S.policy = e.target.value; render(); });
+$('#capacity').addEventListener('input', e => { S.capacity = e.target.value; render(); });
+$('#q').addEventListener('input', e => { F.q = e.target.value; renderList(coverage()); });
+$('#pq').addEventListener('input', e => { F.pq = e.target.value; renderPoints(coverage()); });
+
+/* ================= import ================= */
+$('#fileIn').addEventListener('change', e => importFiles([...e.target.files]));
+['dragenter', 'dragover'].forEach(n => document.addEventListener(n, e => { e.preventDefault(); $('#drop').classList.add('on'); }));
+['dragleave', 'drop'].forEach(n => document.addEventListener(n, e => { e.preventDefault(); if (n === 'drop' || e.target === $('#drop')) $('#drop').classList.remove('on'); }));
+document.addEventListener('drop', e => importFiles([...e.dataTransfer.files]));
+async function importFiles(files) {
+  const notes = [];
+  for (const f of files) {
+    const text = await f.text();
+    try {
+      const r = readAny(f.name, text);
+      if (r.kind === 'assessment') { const d = r.data; S.items = d.items; S.project = d.project || S.project; if (d.policy) S.policy = d.policy.max_method || S.policy; if (d.capacity !== undefined && d.capacity !== null) S.capacity = d.capacity; S.architecture = d.architecture || []; }
+      else { S.points = r.points.map((p, n) => ({id: p.id ?? n + 1, system: '', equipment: '', description: '', name: '', rw: '', units: '', asset: '', ...p})); S.source = f.name; notes.push(`${r.points.length} points read from ${f.name} (${r.kind})`); }
+    } catch (err) { notes.push(`Could not read ${f.name}: ${err.message}`); }
+  }
+  closeDrawer(); render();
+  if (notes.length) toast(notes.join('\n'));
+}
+function toast(msg) { let t = $('#toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg; t.className = 'on'; clearTimeout(t._h); t._h = setTimeout(() => t.className = '', 6000); }
+
+/* ---- readers (ports of adapters.py and parse_points.py) ---- */
+const SYSTEM_RULES = [[/meter|mtr|elec|switchboard|mdb|panel|ups|pdu/, 'Energy'],
+  [/ahu|fcu|fan.?coil|vav|vrf|vrv|chiller|boiler|rtu|mau|crac|crah|cooling.?tower|hvac|zone|heat.?pump|cooling|heating/, 'HVAC'],
+  [/water|leak|tank|reservoir|pump.?station|valve.?chamber|dma|prv|well/, 'Water'], [/light|luminaire|lux/, 'Lighting'],
+  [/lift|elevator|escalator/, 'Vertical transport'], [/pump/, 'HVAC']];
+function systemOf(equip, point) { for (const t of [equip || '', point || '']) for (const [re, s] of SYSTEM_RULES) if (re.test(t.toLowerCase())) return s; return ''; }
+const snake = s => String(s).replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+function readAny(name, text) {
+  const ext = (name.match(/\.[^.]+$/) || [''])[0].toLowerCase(), head = text.slice(0, 4000);
+  if (['.ttl', '.n3', '.nt', '.rdf', '.owl', '.jsonld'].includes(ext)) throw new Error('Brick/RDF models need the command line: python parse_points.py model.ttl, then drop the points.json here');
+  if (ext === '.xml') { if (!head.includes('UANodeSet')) throw new Error('XML is read only as an OPC UA NodeSet2 file'); return {kind: 'OPC UA', points: readOpcUa(text)}; }
+  if (ext === '.json') { const d = JSON.parse(text);
+    if (d.items) return {kind: 'assessment', data: d};
+    if (d.points) return {kind: 'points.json', points: d.points};
+    if (d.rows || (Array.isArray(d) && d.length && typeof d[0] === 'object')) return {kind: 'Haystack', points: readHaystack(d)};
+    throw new Error('not a points list, assessment or Haystack grid'); }
+  if (['.xlsx', '.xls', '.pdf'].includes(ext)) throw new Error('Save the sheet as CSV, or run parse_points.py on it and drop the points.json here');
+  if (/engineering-data-exchange/i.test(head) || (/keyname/i.test(head) && /object-name/i.test(head))) return {kind: 'BACnet EDE', points: readEDE(text)};
+  return {kind: 'table', points: parseCSV(text)};
+}
+const OBJ = {0: 'AI', 1: 'AO', 2: 'AV', 3: 'BI', 4: 'BO', 5: 'BV', 13: 'MI', 14: 'MO', 19: 'MV'};
+const UNITS = {19: 'kWh', 29: '%RH', 47: 'W', 48: 'kW', 53: 'Pa', 62: '°C', 64: '°F', 95: '', 96: 'ppm', 98: '%'};
+function readEDE(text) {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/), hi = lines.findIndex(l => /keyname/i.test(l) && /object-name/i.test(l));
+  const col = {}; lines[hi].split(';').forEach((h, i) => col[h.trim().replace(/^#\s*/, '').toLowerCase()] = i);
+  return lines.slice(hi + 1).filter(l => l.trim() && !l.startsWith('#')).map((l, n) => { const f = l.split(';').map(x => x.trim()), g = h => (h in col ? f[col[h]] : '') || '';
+    const obj = OBJ[parseInt(g('object-type'), 10)] || `type ${g('object-type')}`, settable = /^(y|yes|true|1)$/i.test(g('settable'));
+    const nm = g('object-name'), asset = /[._\-\s]/.test(nm) ? nm.split(/[._\-\s]/)[0] : '', uc = g('unit-code');
+    return {id: n + 1, system: systemOf(asset, nm) || 'BACnet', equipment: `Device ${g('device obj.-instance')} ${obj}`.trim(), description: g('description') || nm, name: nm,
+      rw: ['AO', 'BO', 'MO'].includes(obj) || (['AV', 'BV', 'MV'].includes(obj) && settable) ? 'R/W' : 'R', units: uc === '' ? '' : (UNITS[+uc] ?? (/^\d+$/.test(uc) ? `code ${uc}` : uc)), asset}; });
+}
+const TAG_ORDER = ['discharge', 'supply', 'return', 'outside', 'mixed', 'exhaust', 'zone', 'chilled', 'hot', 'condenser', 'entering', 'leaving', 'air', 'water', 'elec', 'co2', 'humidity', 'temp', 'pressure', 'flow', 'power', 'energy', 'speed', 'damper', 'valve', 'fan', 'pump', 'occupied', 'occ', 'run', 'enable', 'alarm', 'fault', 'effective', 'sp', 'cmd', 'sensor'];
+const EQUIP_TAGS = ['ahu', 'rtu', 'mau', 'fcu', 'vav', 'chiller', 'boiler', 'coolingTower', 'pump', 'meter', 'elec', 'water', 'lighting', 'lift', 'elevator', 'vrf', 'crac', 'fan', 'tank', 'plant'];
+function hval(v) {
+  if (v && typeof v === 'object') { const k = v._kind; if (k === 'marker') return true; if (k === 'ref') return {ref: v.val, dis: v.dis}; if (k === 'number') return `${v.val} ${v.unit || ''}`.trim(); return v.val; }
+  if (typeof v === 'string') { if (v === 'm:' || v === '✓') return true; if (v.startsWith('s:')) return v.slice(2); if (v.startsWith('n:')) return v.slice(2);
+    if (v.startsWith('r:')) { const [r, ...d] = v.slice(2).split(' '); return {ref: r.replace(/^@/, ''), dis: d.join(' ') || null}; } }
+  return v;
+}
+function readHaystack(d) {
+  const rows = (d.rows || d).map(r => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, hval(v)])));
+  const byId = {}; rows.forEach(r => { let id = r.id; if (id && typeof id === 'object') id = id.ref; if (id) byId[String(id).replace(/^@/, '')] = r; });
+  const ord = t => TAG_ORDER.includes(t) ? TAG_ORDER.indexOf(t) : 99;
+  return rows.filter(r => r.point === true).map((r, n) => {
+    const mk = Object.keys(r).filter(k => r[k] === true && !['point', 'his', 'cur', 'writable'].includes(k)), nm = [...mk].sort((a, b) => ord(a) - ord(b)).join('_');
+    const ref = r.equipRef && typeof r.equipRef === 'object' ? r.equipRef : null, eq = ref ? byId[String(ref.ref).replace(/^@/, '')] : null;
+    let em = eq ? Object.keys(eq).filter(k => eq[k] === true && EQUIP_TAGS.includes(k)) : []; if (!em.length) em = mk.filter(m => EQUIP_TAGS.includes(m));
+    return {id: n + 1, system: systemOf(em.join(' '), mk.join(' ')) || 'Haystack', equipment: em.join(' ').toUpperCase(), description: r.dis || r.navName || nm, name: nm,
+      rw: r.writable === true || mk.includes('sp') || mk.includes('cmd') ? 'R/W' : 'R', units: r.unit || '', asset: (ref && ref.dis) || (eq && (eq.dis || eq.navName)) || ''};
+  });
+}
+function readOpcUa(text) {
+  const x = new DOMParser().parseFromString(text, 'application/xml'), nodes = {}, meta = new Set(['EngineeringUnits', 'EURange', 'InstrumentRange', 'Definition', 'ValuePrecision']);
+  [...x.documentElement.children].forEach(el => { const id = el.getAttribute('NodeId'); if (id) { const dn = el.getElementsByTagName('DisplayName')[0];
+    nodes[id] = {tag: el.localName, browse: (el.getAttribute('BrowseName') || '').split(':').pop(), display: dn ? dn.textContent : '', parent: el.getAttribute('ParentNodeId'), el}; } });
+  const out = [];
+  Object.entries(nodes).forEach(([id, n]) => { if (n.tag !== 'UAVariable' || meta.has(n.browse)) return;
+    const par = nodes[n.parent] || {}, desc = n.el.getElementsByTagName('Description')[0], acc = parseInt(n.el.getAttribute('AccessLevel') || '1', 10);
+    const u = Object.values(nodes).find(c => c.parent === id && c.browse === 'EngineeringUnits'), um = u && u.el.textContent.match(/(°C|°F|kWh|kW|%RH|%|ppm|Pa|kPa|bar|m3\/h|l\/s|rpm|A|V)\b/);
+    const eq = par.display || par.browse || '';
+    out.push({id: out.length + 1, system: systemOf(eq, n.browse) || 'OPC UA', equipment: eq, description: (desc && desc.textContent) || n.display || n.browse, name: snake(n.browse), rw: acc & 2 ? 'R/W' : 'R', units: um ? um[1] : '', asset: eq}); });
+  return out;
+}
+function splitCSV(line, d) { const out = []; let cur = '', q = false; for (const ch of line) { if (ch === '"') q = !q; else if (ch === d && !q) { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out.map(s => s.trim()); }
+function parseCSV(text) {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+  const d = (lines[0].match(/;/g) || []).length > (lines[0].match(/,/g) || []).length ? ';' : (lines[0].includes('\t') ? '\t' : ',');
+  const SYN = {id: ['#', 'no', 'no.', 'id', 'point id', 'row', 'sr', 's/n'], system: ['system', 'discipline', 'subsystem', 'service'],
+    equipment: ['equipment', 'equipment type', 'asset type', 'device type', 'equipment class', 'class', 'object type'],
+    description: ['point', 'description', 'point description', 'signal', 'descriptor', 'point name description'],
+    name: ['dbo point name', 'dbo', 'tag', 'tag name', 'tagname', 'object name', 'object-name', 'name', 'point name', 'pi point'],
+    rw: ['read/write', 'r/w', 'rw', 'access', 'settable', 'writable'], units: ['units', 'unit', 'engunits', 'eng units', 'engineering units', 'uom'],
+    asset: ['asset', 'equipment id', 'equipment name', 'device', 'device name', 'instance', 'location']};
+  let hi = 0, best = {};
+  lines.slice(0, 30).forEach((l, i) => { const h = splitCSV(l, d).map(x => x.replace(/^#\s*/, '').toLowerCase()), c = {};
+    if (h.includes('#') || h[0] === '#') c.id = h.indexOf('#');
+    Object.entries(SYN).forEach(([f, syn]) => { if (f in c) return; const j = h.findIndex((x, k) => syn.includes(x) && !Object.values(c).includes(k)); if (j >= 0) c[f] = j; });
+    if (Object.keys(c).length > Object.keys(best).length) { best = c; hi = i; } });
+  if (!('name' in best) && !('description' in best)) throw new Error('no point name, tag or description column found');
+  const seen = new Set();
+  return lines.slice(hi + 1).map((l, n) => { const r = splitCSV(l, d), g = f => f in best ? (r[best[f]] || '').trim() : '';
+    let rw = g('rw').toUpperCase().replace(/\s/g, ''); rw = ['Y', 'YES', 'RW', 'R/W', 'W', 'TRUE'].includes(rw) ? 'R/W' : (['N', 'NO', 'R', 'RO', 'FALSE'].includes(rw) ? 'R' : rw);
+    let nm = g('name'); if (/^(n\/?a|-)$/i.test(nm)) nm = '';
+    const asset = g('asset') || (nm.includes('.') && !g('equipment') ? nm.split('.')[0] : ''), desc = g('description');
+    const idv = g('id'), id = /^\d+(\.0)?$/.test(idv) ? parseInt(idv, 10) : (idv || n + 1);
+    return {id, system: g('system') || systemOf(`${g('equipment')} ${asset}`, `${nm} ${desc}`), equipment: g('equipment'), description: desc, name: nm, rw, units: g('units'), asset}; })
+    .filter(p => (p.name || p.description) && !seen.has(String(p.id)) && seen.add(String(p.id)));
+}
+
+/* ================= export ================= */
+const download = (name, blob) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); };
+const slug = () => (S.project || 'pointproof').replace(/[^\w-]+/g, '_').slice(0, 60);
+const assessmentJSON = () => ({project: S.project, points_source: S.source, policy: {max_method: S.policy}, capacity: S.capacity === '' ? undefined : +S.capacity, items: S.items, architecture: S.architecture});
+const ptsLabel = i => { const idx = byId(); return (i.points || []).map(pt => `#${pt.id} ${pt.name || ((idx.get(String(pt.id)) || {}).name || '')}`).join('\n'); };
+const rowsForExport = () => S.items.map(i => ({Ref: i.ref, Requirement: i.title, Group: i.group || '', Verdict: i.verdict === 'applicable' ? 'Applicable' : 'Out of scope',
+  Method: (i.method || []).map(m => MLABEL[m] || m).join(' + '), Why: i.verdict === 'applicable' ? (i.why || '') : (i.reason || ''), 'Input points': ptsLabel(i), 'Other inputs': i.other_inputs || '',
+  Logic: (i.logic || []).join('\n'), Output: i.output || '', 'Example output (illustrative)': i.example || '', Runs: i.runs || '', 'History needed': i.history || '', Missing: (i.missing || []).join('\n')}));
+const exporters = {
+  json: () => download(slug() + '_assessment.json', new Blob([JSON.stringify(assessmentJSON(), null, 1)], {type: 'application/json'})),
+  csv: () => { const r = rowsForExport(), h = Object.keys(r[0] || {Ref: ''}); const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    download(slug() + '_requirements.csv', new Blob(['﻿' + [h.map(q).join(','), ...r.map(o => h.map(k => q(o[k])).join(','))].join('\r\n')], {type: 'text/csv'})); },
+  xlsx: async () => {
+    try { if (!window.XLSX) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
+    catch (e) { alert('Excel export needs an internet connection the first time. Exporting CSV instead.'); exporters.csv(); return; }
+    const C = coverage(), wb = XLSX.utils.book_new();
+    const sum = [['Project', S.project], ['Points source', S.source], ['Policy (highest method)', MLABEL[S.policy]], ['Requirements', S.items.length], ['Applicable', C.app.length], ['Coverage', pct(C.app.length, S.items.length) + '%'], ['Points used', `${C.used.size} of ${S.points.length}`], [], ['Group', 'Applicable', 'Total', '%'], ...Object.entries(C.groups).map(([g, [a, t]]) => [g, a, t, pct(a, t) + '%']), [], ['System', 'Points used', 'Points', '%'], ...Object.entries(C.systems).map(([s, [u, t]]) => [s, u, t, pct(u, t) + '%'])];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), 'Summary');
+    const ws = XLSX.utils.json_to_sheet(rowsForExport()); ws['!cols'] = [8, 32, 16, 13, 18, 40, 44, 30, 50, 36, 40, 16, 16, 30].map(w => ({wch: w}));
+    XLSX.utils.book_append_sheet(wb, ws, 'Requirements');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(S.points), 'Points');
+    XLSX.writeFile(wb, slug() + '_PointProof.xlsx');
+  },
+  pdf: () => { buildReport(); setTimeout(() => window.print(), 50); },
+  html: () => { const d = JSON.parse(JSON.stringify(RAW)); d.points = {source: S.source, points: S.points}; d.assessment = assessmentJSON();
+    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML.replace(/(<script type="application\/json" id="pp-data">)[\s\S]*?(<\/script>)/, (m, a, b) => a + JSON.stringify(d).replace(/</g, '\\u003c') + b);
+    download(slug() + '_studio.html', new Blob([html], {type: 'text/html'})); }
+};
+function buildReport() {
+  const C = coverage(), N = S.items.length, A = C.app.length;
+  const app = C.app.map(i => `<tr><td><b>${esc(i.ref)}</b></td><td>${esc(i.title)}</td><td>${(i.method || []).map(m => MLABEL[m]).join(' + ')}</td><td style="white-space:pre-line;font-family:var(--mono);font-size:7.5pt">${esc(ptsLabel(i))}</td><td>${esc(i.output || '')}</td></tr>`).join('');
+  const out = S.items.filter(i => i.verdict !== 'applicable').map(i => `<tr><td><b>${esc(i.ref)}</b></td><td>${esc(i.title)}</td><td>${esc(i.group || '')}</td><td>${esc(i.reason || '')}</td></tr>`).join('');
+  $('#report').innerHTML = `<section><h1>${esc(S.project)}</h1><p class="muted">AI use cases proven against ${esc(S.source || 'the points list')} with PointProof. Highest method delivered: ${MLABEL[S.policy]}.</p>
+    <div class="kp"><div><b>${pct(A, N)}%</b>${A} of ${N} requirements covered</div><div><b>${pct(C.used.size, S.points.length)}%</b>${C.used.size} of ${S.points.length} points used</div><div><b>${N - A}</b>out of scope</div></div>
+    <h2>Coverage by group</h2>${$('#byGroup').innerHTML}<h2 style="margin-top:12px">Method ladder</h2>${$('#ladder').innerHTML}</section>
+    <section><h2>Architecture</h2>${archSVG(C)}</section>
+    <section><h2>Applicable (${A})</h2><table><thead><tr><th>Ref</th><th>Requirement</th><th>Method</th><th>Input points</th><th>Output</th></tr></thead><tbody>${app}</tbody></table></section>
+    <section><h2>Out of scope (${N - A})</h2><table><thead><tr><th>Ref</th><th>Requirement</th><th>Group</th><th>Reason</th></tr></thead><tbody>${out}</tbody></table></section>`;
+}
+window.addEventListener('beforeprint', buildReport);
+render();
+if (!S.items.length && S.points.length) document.querySelector('[data-tab="suggest"]').click();
+</script>
+</body>
+</html>

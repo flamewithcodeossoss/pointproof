@@ -1,0 +1,105 @@
+# PointProof use-case library: water networks (distribution, district metered areas, pumping)
+version: 2
+domain: water
+usecases:
+
+  - id: dma-water-balance
+    title: District metered area water balance (non-revenue water)
+    method: [rules]
+    standards: [IWA water balance]
+    why: Inflow minus billed or metered consumption is arithmetic.
+    slots:
+      - {key: inflow, label: DMA inlet flow or volume, required: true, match: {name: [inlet_flow, inflow, flow_rate, cumulative_volume, volume]}}
+      - {key: consumption, label: Customer or sub-meter volumes, required: false, match: {name: [cumulative_water_volume, consumption, sub_meter]}}
+    external: [DMA boundaries, Billing volumes]
+    logic:
+      - "Daily per DMA: losses = inflow − sum of metered consumption; % of inflow."
+      - Flag DMAs whose loss share rises above a set level for 3 days.
+    output: Loss per DMA (m³/day and %), ranked.
+    runs: Daily
+    history: None
+
+  - id: minimum-night-flow
+    title: Leak detection from minimum night flow
+    method: [statistics]
+    standards: [Minimum night flow analysis]
+    why: Night flow when legitimate use is lowest; a rising trend against its own baseline signals leakage.
+    slots:
+      - {key: flow, label: DMA or zone flow rate, required: true, match: {name: [flow_rate, flow]}}
+    logic:
+      - Minimum flow between 02:00 and 04:00 per day and DMA.
+      - Baseline = rolling 30-day median; flag a sustained rise (e.g. +20% for 3 nights).
+    output: Leak alerts per DMA with the night-flow trend.
+    runs: Daily
+    history: 30 days
+
+  - id: burst-detection
+    title: Burst detection from flow and pressure
+    method: [statistics]
+    why: A sudden flow rise with a pressure drop against the same hour's profile; no training needed.
+    slots:
+      - {key: flow, label: Flow rate, required: true, match: {name: [flow_rate, flow]}}
+      - {key: pressure, label: Line pressure, required: false, match: {name: [pressure]}}
+      - {key: alarm, label: High-flow alarm, required: false, match: {name: [high_flow, burst]}}
+    logic:
+      - Expected flow and pressure per hour-of-week from the last 4–8 weeks.
+      - Flag when flow is above and pressure below their bands for 15 min or more.
+    output: Burst alerts with location and estimated loss rate.
+    runs: Every 15 min
+    history: 4–8 weeks
+
+  - id: tank-level-management
+    title: Reservoir and tank level management
+    method: [rules]
+    why: Levels against high and low bands, and time to empty or overflow at current net flow.
+    slots:
+      - {key: level, label: Tank level, required: true, match: {name: [tank_level, water_level, level, reservoir]}}
+      - {key: flow, label: Inlet or outlet flow, required: false, match: {name: [flow]}}
+    logic:
+      - "Time to low level = volume above low band ÷ net outflow; warn when under a set number of hours."
+    output: Warnings with hours to empty or overflow.
+    runs: Every 15 min
+    history: None
+
+  - id: pump-scheduling-tariff
+    title: Pump scheduling against tariff and tank limits
+    method: [optimisation]
+    standards: [Mixed-integer programming]
+    why: Choosing pump on/off hours to keep tanks within limits at the lowest energy cost is a scheduling optimisation.
+    solver: scripts/optimise/schedule_maintenance.py
+    slots:
+      - {key: pump, label: Pump run status or command, required: true, match: {name: [pump.*run, run_status, pump.*command], equipment: [pump]}}
+      - {key: level, label: Tank level, required: true, match: {name: [level]}}
+      - {key: power, label: Pump power, required: false, match: {name: [power], exclude: [power_factor]}}
+    external: [Tariff by hour, Tank volumes and limits, Pump capacities, Demand profile]
+    logic:
+      - Hourly demand profile per zone (statistics).
+      - "Solve: pump hours so tank levels stay within limits; minimise energy cost; respect minimum run and rest times."
+    output: 24-hour pump schedule for approval, with expected cost and tank trajectory.
+    runs: Daily
+    history: 4 weeks
+
+  - id: pressure-management
+    title: Pressure management by zone
+    method: [rules]
+    why: Night pressure above the service minimum adds leakage; a fixed reduction profile per zone answers it.
+    slots:
+      - {key: pressure, label: Zone or PRV outlet pressure, required: true, match: {name: [pressure]}}
+      - {key: prv, label: PRV setpoint (writable), required: false, writable: true, match: {name: [setpoint]}}
+    logic:
+      - Compare night pressure with the service minimum at the critical point; recommend a lower night setpoint within limits.
+    output: Setpoint recommendations per zone for operator approval.
+    runs: Daily
+    history: 2 weeks
+
+  - id: water-demand-forecast
+    title: Water demand forecast
+    method: [ml]
+    why: Accurate day-ahead demand needs a trained model with weather and calendar inputs.
+    slots:
+      - {key: flow, label: Flow or volume history, required: true, match: {name: [flow, volume]}}
+    logic:
+      - Train a time-series model per zone; retrain regularly.
+    output: Day-ahead demand per zone.
+    runs: Daily
+    history: 12 months

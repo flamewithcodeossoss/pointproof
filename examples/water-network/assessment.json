@@ -1,0 +1,238 @@
+{
+ "project": "Riverside Water Network (fictional demo)",
+ "policy": {
+  "max_method": "optimisation"
+ },
+ "items": [
+  {
+   "ref": "W1",
+   "title": "Non-revenue water by DMA",
+   "group": "Network losses",
+   "verdict": "applicable",
+   "usecase": "dma-water-balance",
+   "method": [
+    "rules"
+   ],
+   "why": "Inflow minus billed consumption per DMA is arithmetic (IWA water balance).",
+   "points": [
+    {
+     "id": 2,
+     "name": "dma01_inlet_cumulative_volume"
+    },
+    {
+     "id": 8,
+     "name": "dma02_inlet_cumulative_volume"
+    },
+    {
+     "id": 25,
+     "name": "dma01_customer_cumulative_water_volume"
+    },
+    {
+     "id": 26,
+     "name": "dma02_customer_cumulative_water_volume"
+    }
+   ],
+   "other_inputs": "DMA boundaries; billing periods.",
+   "logic": [
+    "Daily losses = inlet volume − billed volume per DMA.",
+    "Loss share of inflow; flag a rise above a set level for 3 days."
+   ],
+   "output": "Loss per DMA (m³/day, %), ranked.",
+   "example": "DMA-02: 412 m³/day lost (18.6% of inflow), up from 13% last month.",
+   "runs": "Daily",
+   "history": "None"
+  },
+  {
+   "ref": "W2",
+   "title": "Leak detection from night flow",
+   "group": "Network losses",
+   "verdict": "applicable",
+   "usecase": "minimum-night-flow",
+   "method": [
+    "statistics"
+   ],
+   "why": "Minimum night flow against its own 30-day median; no training.",
+   "points": [
+    {
+     "id": 1,
+     "name": "dma01_inlet_flow_rate"
+    },
+    {
+     "id": 7,
+     "name": "dma02_inlet_flow_rate"
+    }
+   ],
+   "logic": [
+    "Minimum flow 02:00–04:00 per night.",
+    "Flag +20% over the 30-day median for 3 nights (example threshold)."
+   ],
+   "output": "Leak alerts per DMA with the night-flow trend.",
+   "example": "DMA-01 night flow 38 m³/h vs 29 m³/h median for 4 nights: probable new leak.",
+   "runs": "Daily",
+   "history": "30 days"
+  },
+  {
+   "ref": "W3",
+   "title": "Burst alerts",
+   "group": "Network losses",
+   "verdict": "applicable",
+   "usecase": "burst-detection",
+   "method": [
+    "statistics"
+   ],
+   "why": "Flow above and pressure below their hour-of-week bands at the same time.",
+   "points": [
+    {
+     "id": 7,
+     "name": "dma02_inlet_flow_rate"
+    },
+    {
+     "id": 9,
+     "name": "dma02_inlet_pressure"
+    },
+    {
+     "id": 10,
+     "name": "dma02_high_flow_alarm"
+    }
+   ],
+   "logic": [
+    "Expected flow and pressure per hour-of-week from 4–8 weeks.",
+    "Flag when both leave their bands for 15 min."
+   ],
+   "output": "Burst alert with estimated loss rate.",
+   "example": "DMA-02 02:40: flow +65 m³/h above band, pressure −0.8 bar: probable burst.",
+   "runs": "Every 15 min",
+   "history": "4–8 weeks"
+  },
+  {
+   "ref": "W4",
+   "title": "Reservoir level warnings",
+   "group": "Operations",
+   "verdict": "applicable",
+   "usecase": "tank-level-management",
+   "method": [
+    "rules"
+   ],
+   "why": "Hours to low level at the current net outflow.",
+   "points": [
+    {
+     "id": 11,
+     "name": "r1_tank_level"
+    },
+    {
+     "id": 12,
+     "name": "r1_inlet_flow_rate"
+    },
+    {
+     "id": 13,
+     "name": "r1_outlet_flow_rate"
+    },
+    {
+     "id": 15,
+     "name": "r1_low_level_alarm"
+    }
+   ],
+   "other_inputs": "Tank volume per % level.",
+   "logic": [
+    "Net outflow = outlet − inlet.",
+    "Hours to low level = volume above low band ÷ net outflow; warn under 6 h (example)."
+   ],
+   "output": "Warning with hours to low level.",
+   "example": "R1 at 41%: 4.5 h to low level at the current draw.",
+   "runs": "Every 15 min",
+   "history": "None"
+  },
+  {
+   "ref": "W5",
+   "title": "Pump scheduling against tariff",
+   "group": "Energy",
+   "verdict": "applicable",
+   "usecase": "pump-scheduling-tariff",
+   "method": [
+    "statistics",
+    "optimisation"
+   ],
+   "why": "Hourly demand profile (statistics), then pump hours chosen by a solver to keep R1 within limits at the lowest tariff cost.",
+   "points": [
+    {
+     "id": 16,
+     "name": "ps1_pump1_run_status"
+    },
+    {
+     "id": 17,
+     "name": "ps1_pump1_run_command"
+    },
+    {
+     "id": 18,
+     "name": "ps1_pump2_run_status"
+    },
+    {
+     "id": 19,
+     "name": "ps1_pump2_run_command"
+    },
+    {
+     "id": 20,
+     "name": "ps1_power"
+    },
+    {
+     "id": 11,
+     "name": "r1_tank_level"
+    }
+   ],
+   "other_inputs": "Tariff by hour; tank limits; pump capacities.",
+   "logic": [
+    "Hourly demand profile from 4 weeks.",
+    "Solve pump on/off per hour: tank within 30–95%, min run 2 h, min cost (example limits).",
+    "Operator approves the schedule; SCADA executes."
+   ],
+   "output": "24-hour pump schedule with expected cost and tank trajectory.",
+   "example": "Run P1 22:00–06:00 and P2 01:00–05:00; cost 1,940 vs 2,610 today (−26%).",
+   "runs": "Daily",
+   "history": "4 weeks",
+   "missing": [
+    "Tariff table and pump curves (master data)"
+   ]
+  },
+  {
+   "ref": "W6",
+   "title": "Night pressure reduction",
+   "group": "Operations",
+   "verdict": "applicable",
+   "usecase": "pressure-management",
+   "method": [
+    "rules"
+   ],
+   "why": "Night pressure above the critical-point minimum adds leakage; a fixed lower night setpoint answers it.",
+   "points": [
+    {
+     "id": 4,
+     "name": "dma01_prv_outlet_pressure"
+    },
+    {
+     "id": 5,
+     "name": "dma01_prv_pressure_setpoint"
+    },
+    {
+     "id": 6,
+     "name": "dma01_cp_pressure"
+    }
+   ],
+   "logic": [
+    "Compare critical-point pressure at night with the service minimum.",
+    "Recommend a lower night PRV setpoint within limits; operator approves."
+   ],
+   "output": "PRV setpoint recommendation.",
+   "example": "DMA-01 PRV night setpoint 3.2 → 2.7 bar; critical point stays above 1.5 bar.",
+   "runs": "Daily",
+   "history": "2 weeks"
+  },
+  {
+   "ref": "W7",
+   "title": "Day-ahead demand forecast",
+   "group": "Operations",
+   "verdict": "out_of_scope",
+   "reason": "Needs a trained forecasting model (ML); the policy stops at optimisation."
+  }
+ ],
+ "architecture": []
+}

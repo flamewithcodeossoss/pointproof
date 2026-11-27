@@ -1,0 +1,360 @@
+[
+ {
+  "usecase": "sensor-data-quality",
+  "domain": "general",
+  "title": "Sensor and data-quality checks",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "measurements",
+    "label": "Analog measurements",
+    "required": true,
+    "writable": false,
+    "count": 16,
+    "point_ids": [
+     1,
+     2,
+     3,
+     4,
+     6,
+     7,
+     8,
+     9,
+     11,
+     12,
+     13,
+     20,
+     21,
+     22,
+     25,
+     26
+    ]
+   },
+   {
+    "key": "comms",
+    "label": "Device online or communication status",
+    "required": false,
+    "writable": false,
+    "count": 0,
+    "point_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "short-cycling",
+  "domain": "general",
+  "title": "Equipment short-cycling",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "run",
+    "label": "Run status of any motor, pump, compressor, fan or unit",
+    "required": true,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     16,
+     18
+    ]
+   },
+   {
+    "key": "power",
+    "label": "Power (to size the extra wear and energy)",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     20
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "dma-water-balance",
+  "domain": "water",
+  "title": "District metered area water balance (non-revenue water)",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "inflow",
+    "label": "DMA inlet flow or volume",
+    "required": true,
+    "writable": false,
+    "count": 9,
+    "point_ids": [
+     1,
+     2,
+     7,
+     8,
+     10,
+     12,
+     13,
+     25,
+     26
+    ]
+   },
+   {
+    "key": "consumption",
+    "label": "Customer or sub-meter volumes",
+    "required": false,
+    "writable": false,
+    "count": 2,
+    "point_ids": [
+     25,
+     26
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "minimum-night-flow",
+  "domain": "water",
+  "title": "Leak detection from minimum night flow",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "flow",
+    "label": "DMA or zone flow rate",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     1,
+     7,
+     10,
+     12,
+     13
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "burst-detection",
+  "domain": "water",
+  "title": "Burst detection from flow and pressure",
+  "method": [
+   "statistics"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "flow",
+    "label": "Flow rate",
+    "required": true,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     1,
+     7,
+     10,
+     12,
+     13
+    ]
+   },
+   {
+    "key": "pressure",
+    "label": "Line pressure",
+    "required": false,
+    "writable": false,
+    "count": 6,
+    "point_ids": [
+     3,
+     4,
+     5,
+     6,
+     9,
+     22
+    ]
+   },
+   {
+    "key": "alarm",
+    "label": "High-flow alarm",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     10
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "tank-level-management",
+  "domain": "water",
+  "title": "Reservoir and tank level management",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "level",
+    "label": "Tank level",
+    "required": true,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     11,
+     14,
+     15
+    ]
+   },
+   {
+    "key": "flow",
+    "label": "Inlet or outlet flow",
+    "required": false,
+    "writable": false,
+    "count": 5,
+    "point_ids": [
+     1,
+     7,
+     10,
+     12,
+     13
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "pump-scheduling-tariff",
+  "domain": "water",
+  "title": "Pump scheduling against tariff and tank limits",
+  "method": [
+   "optimisation"
+  ],
+  "solver": "scripts/optimise/schedule_maintenance.py",
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "pump",
+    "label": "Pump run status or command",
+    "required": true,
+    "writable": false,
+    "count": 4,
+    "point_ids": [
+     16,
+     17,
+     18,
+     19
+    ]
+   },
+   {
+    "key": "level",
+    "label": "Tank level",
+    "required": true,
+    "writable": false,
+    "count": 3,
+    "point_ids": [
+     11,
+     14,
+     15
+    ]
+   },
+   {
+    "key": "power",
+    "label": "Pump power",
+    "required": false,
+    "writable": false,
+    "count": 1,
+    "point_ids": [
+     20
+    ]
+   }
+  ]
+ },
+ {
+  "usecase": "pressure-management",
+  "domain": "water",
+  "title": "Pressure management by zone",
+  "method": [
+   "rules"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "pressure",
+    "label": "Zone or PRV outlet pressure",
+    "required": true,
+    "writable": false,
+    "count": 6,
+    "point_ids": [
+     3,
+     4,
+     5,
+     6,
+     9,
+     22
+    ]
+   },
+   {
+    "key": "prv",
+    "label": "PRV setpoint (writable)",
+    "required": false,
+    "writable": true,
+    "count": 1,
+    "point_ids": [
+     5
+    ],
+    "writable_unknown_ids": []
+   }
+  ]
+ },
+ {
+  "usecase": "water-demand-forecast",
+  "domain": "water",
+  "title": "Water demand forecast",
+  "method": [
+   "ml"
+  ],
+  "solver": null,
+  "status": "ready",
+  "missing_required": [],
+  "slots": [
+   {
+    "key": "flow",
+    "label": "Flow or volume history",
+    "required": true,
+    "writable": false,
+    "count": 9,
+    "point_ids": [
+     1,
+     2,
+     7,
+     8,
+     10,
+     12,
+     13,
+     25,
+     26
+    ]
+   }
+  ]
+ }
+]

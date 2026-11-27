@@ -1,0 +1,88 @@
+# PointProof use-case library: industrial plants (process and discrete manufacturing)
+version: 2
+domain: industrial
+usecases:
+
+  - id: oee
+    title: Overall equipment effectiveness (OEE)
+    method: [rules]
+    standards: [OEE = availability × performance × quality]
+    why: Counts and states from the line; arithmetic.
+    slots:
+      - {key: state, label: Machine running state, required: true, match: {name: [run_status, running, machine_state, state]}}
+      - {key: count, label: Good or total count, required: true, match: {name: [count, produced, good, units]}}
+      - {key: reject, label: Reject or scrap count, required: false, match: {name: [reject, scrap, bad]}}
+    external: [Ideal cycle time per product, Planned production time]
+    logic:
+      - Availability = run time ÷ planned time; performance = ideal cycle × count ÷ run time; quality = good ÷ total.
+    output: OEE per line and shift, with the largest loss category.
+    runs: Per shift
+    history: None
+
+  - id: spc-control-charts
+    title: Statistical process control
+    method: [statistics]
+    standards: [Shewhart control charts, Western Electric rules]
+    why: Control limits from process history; rule violations flag drift before spec limits are reached.
+    slots:
+      - {key: variable, label: Process variable (temperature, pressure, flow, weight…), required: true, match: {name: [temperature, pressure, flow, weight, level, thickness]}}
+    logic:
+      - Control limits = mean ± 3σ from a stable period; apply run rules to each new subgroup.
+    output: Out-of-control alerts per variable, with the rule that fired.
+    runs: Per sample
+    history: 25+ subgroups
+
+  - id: energy-per-unit
+    title: Energy per unit produced
+    method: [statistics]
+    standards: [ISO 50001 energy performance indicators]
+    why: Energy against production with a regression baseline; no ML.
+    slots:
+      - {key: energy, label: Energy, required: true, match: {name: [energy, kwh, power], exclude: [power_factor]}}
+      - {key: count, label: Production count, required: true, match: {name: [count, produced, units, tonnage]}}
+    logic:
+      - "Fit energy = a + b × production; flag days above the expected band."
+    output: Energy per unit and deviation by line and day.
+    runs: Daily
+    history: 3 months
+
+  - id: compressed-air-leaks
+    title: Compressed air leak detection
+    method: [statistics]
+    why: Flow or compressor load when production is stopped is mostly leakage.
+    slots:
+      - {key: air, label: Compressed air flow or compressor power, required: true, match: {name: [air_flow, compressor, compressed]}}
+      - {key: state, label: Production state, required: false, match: {name: [run_status, state]}}
+    logic:
+      - Off-shift baseline flow; flag rising trend; cost = leak flow × specific power × hours × tariff.
+    output: Weekly leak cost estimate and trend.
+    runs: Weekly
+    history: 4 weeks
+
+  - id: production-scheduling
+    title: Production scheduling
+    method: [optimisation]
+    standards: [Job-shop scheduling (CP-SAT)]
+    why: Sequencing orders on machines with changeovers, due dates and capacity is a scheduling optimisation.
+    solver: scripts/optimise/schedule_maintenance.py
+    slots:
+      - {key: state, label: Machine state, required: true, match: {name: [run_status, state, machine]}}
+    external: [Orders with due dates, Routings and cycle times, Changeover matrix, Shifts]
+    logic:
+      - "Solve: assign and sequence jobs to machines; minimise lateness and changeovers within shift capacity."
+    output: Sequenced schedule per machine, with late orders flagged.
+    runs: Per shift
+    history: None
+
+  - id: vibration-predictive-maintenance
+    title: Vibration-based predictive maintenance
+    method: [ml]
+    standards: [ISO 10816 / ISO 20816 severity zones for the rules baseline]
+    why: Severity thresholds are rules; predicting failure time from spectra needs a trained model.
+    slots:
+      - {key: vibration, label: Vibration, required: true, match: {name: [vibration, velocity_rms, acceleration]}}
+    logic:
+      - Rules first (ISO severity zones); train a degradation model once failures are recorded.
+    output: Health and predicted failure window per asset.
+    runs: Hourly
+    history: Failure history

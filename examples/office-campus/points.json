@@ -1,0 +1,505 @@
+{
+ "source": "points.csv",
+ "format": "table",
+ "columns": {
+  "system": "System",
+  "equipment": "Equipment",
+  "description": "Description",
+  "name": "Tag",
+  "rw": "Access",
+  "units": "Units"
+ },
+ "count": 49,
+ "points": [
+  {
+   "id": 1,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Supply air temperature",
+   "name": "AHU1.SAT",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 2,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Supply air temperature setpoint",
+   "name": "AHU1.SATSP",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 3,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Return air temperature",
+   "name": "AHU1.RAT",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 4,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Return air CO2",
+   "name": "AHU1.RACO2",
+   "rw": "R",
+   "units": "ppm",
+   "asset": ""
+  },
+  {
+   "id": 5,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Outdoor air damper position",
+   "name": "AHU1.OAD",
+   "rw": "R/W",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 6,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Cooling valve position",
+   "name": "AHU1.CLGVLV",
+   "rw": "R/W",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 7,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Supply fan run status",
+   "name": "AHU1.SF.STS",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 8,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Supply fan speed",
+   "name": "AHU1.SF.SPD",
+   "rw": "R/W",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 9,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Supply fan power",
+   "name": "AHU1.KW",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 10,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Supply fan run hours",
+   "name": "AHU1.HRS",
+   "rw": "R",
+   "units": "h",
+   "asset": ""
+  },
+  {
+   "id": 11,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Dirty filter alarm",
+   "name": "AHU1.FLT",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 12,
+   "system": "HVAC",
+   "equipment": "AHU-1",
+   "description": "Time schedule",
+   "name": "AHU1.SCHED",
+   "rw": "R/W",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 13,
+   "system": "HVAC",
+   "equipment": "FCU-301",
+   "description": "Zone air temperature",
+   "name": "FCU301.ZNT",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 14,
+   "system": "HVAC",
+   "equipment": "FCU-301",
+   "description": "Zone air temperature setpoint",
+   "name": "FCU301.ZNTSP",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 15,
+   "system": "HVAC",
+   "equipment": "FCU-301",
+   "description": "Zone occupancy sensor",
+   "name": "FCU301.OCC",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 16,
+   "system": "HVAC",
+   "equipment": "FCU-301",
+   "description": "Fan coil run status",
+   "name": "FCU301.STS",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 17,
+   "system": "HVAC",
+   "equipment": "FCU-301",
+   "description": "Fan coil fault alarm",
+   "name": "FCU301.ALM",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 18,
+   "system": "HVAC",
+   "equipment": "FCU-302",
+   "description": "Zone air temperature",
+   "name": "FCU302.ZNT",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 19,
+   "system": "HVAC",
+   "equipment": "FCU-302",
+   "description": "Zone air temperature setpoint",
+   "name": "FCU302.ZNTSP",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 20,
+   "system": "HVAC",
+   "equipment": "FCU-302",
+   "description": "Zone occupancy sensor",
+   "name": "FCU302.OCC",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 21,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chiller run status",
+   "name": "CH1.STS",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 22,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chilled water supply temperature",
+   "name": "CH1.CHWST",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 23,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chilled water return temperature",
+   "name": "CH1.CHWRT",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 24,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chilled water supply temperature setpoint",
+   "name": "CH1.CHWSTSP",
+   "rw": "R/W",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 25,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chiller power",
+   "name": "CH1.KW",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 26,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chiller run hours",
+   "name": "CH1.HRS",
+   "rw": "R",
+   "units": "h",
+   "asset": ""
+  },
+  {
+   "id": 27,
+   "system": "HVAC",
+   "equipment": "Chiller 1",
+   "description": "Chiller fault alarm",
+   "name": "CH1.FLT",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 28,
+   "system": "HVAC",
+   "equipment": "CHW pump 1",
+   "description": "Chilled water pump run status",
+   "name": "CHWP1.STS",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 29,
+   "system": "HVAC",
+   "equipment": "Weather station",
+   "description": "Outside air temperature",
+   "name": "WS.OAT",
+   "rw": "R",
+   "units": "°C",
+   "asset": ""
+  },
+  {
+   "id": 30,
+   "system": "Energy",
+   "equipment": "Main incomer",
+   "description": "Main incomer energy",
+   "name": "MTR.MAIN.KWH",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 31,
+   "system": "Energy",
+   "equipment": "Main incomer",
+   "description": "Main incomer demand",
+   "name": "MTR.MAIN.KW",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 32,
+   "system": "Energy",
+   "equipment": "Main incomer",
+   "description": "Peak demand this month",
+   "name": "MTR.MAIN.KWPK",
+   "rw": "R",
+   "units": "kW",
+   "asset": ""
+  },
+  {
+   "id": 33,
+   "system": "Energy",
+   "equipment": "Main incomer",
+   "description": "Power factor",
+   "name": "MTR.MAIN.PF",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 34,
+   "system": "Energy",
+   "equipment": "Main incomer",
+   "description": "Meter online status",
+   "name": "MTR.MAIN.ONL",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 35,
+   "system": "Energy",
+   "equipment": "HVAC board",
+   "description": "HVAC sub-meter energy",
+   "name": "MTR.HVAC.KWH",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 36,
+   "system": "Energy",
+   "equipment": "Lighting board",
+   "description": "Lighting sub-meter energy",
+   "name": "MTR.LTG.KWH",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 37,
+   "system": "Energy",
+   "equipment": "Small power board",
+   "description": "Small power sub-meter energy",
+   "name": "MTR.SP.KWH",
+   "rw": "R",
+   "units": "kWh",
+   "asset": ""
+  },
+  {
+   "id": 38,
+   "system": "Lighting",
+   "equipment": "Lighting panel L3",
+   "description": "Lighting zone level 3 status",
+   "name": "LTG.L3.STS",
+   "rw": "R/W",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 39,
+   "system": "Occupancy",
+   "equipment": "People counter",
+   "description": "Entrance people count",
+   "name": "PC.ENT.CNT",
+   "rw": "R",
+   "units": "people",
+   "asset": ""
+  },
+  {
+   "id": 40,
+   "system": "Water",
+   "equipment": "Water meter",
+   "description": "Cumulative water volume",
+   "name": "WTR.MAIN.VOL",
+   "rw": "R",
+   "units": "m³",
+   "asset": ""
+  },
+  {
+   "id": 41,
+   "system": "Water",
+   "equipment": "Water meter",
+   "description": "Leak alarm",
+   "name": "WTR.MAIN.LEAK",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 42,
+   "system": "Washrooms",
+   "equipment": "Ground floor washroom",
+   "description": "Soap dispenser level",
+   "name": "WC.G.SOAP",
+   "rw": "R",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 43,
+   "system": "Washrooms",
+   "equipment": "Ground floor washroom",
+   "description": "Towel dispenser level",
+   "name": "WC.G.TOWEL",
+   "rw": "R",
+   "units": "%",
+   "asset": ""
+  },
+  {
+   "id": 44,
+   "system": "CMMS",
+   "equipment": "Work orders",
+   "description": "Work order number",
+   "name": "CMMS.WO.ID",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 45,
+   "system": "CMMS",
+   "equipment": "Work orders",
+   "description": "Work order status",
+   "name": "CMMS.WO.STATUS",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 46,
+   "system": "CMMS",
+   "equipment": "Work orders",
+   "description": "Work order priority",
+   "name": "CMMS.WO.PRIORITY",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 47,
+   "system": "CMMS",
+   "equipment": "Work orders",
+   "description": "Assigned technician",
+   "name": "CMMS.WO.ASSIGNED",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 48,
+   "system": "CMMS",
+   "equipment": "Work orders",
+   "description": "SLA due date",
+   "name": "CMMS.WO.SLADUE",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  },
+  {
+   "id": 49,
+   "system": "CMMS",
+   "equipment": "Work orders",
+   "description": "Completion date",
+   "name": "CMMS.WO.CLOSED",
+   "rw": "R",
+   "units": "",
+   "asset": ""
+  }
+ ]
+}

@@ -1,0 +1,73 @@
+# PointProof use-case library: data centres
+version: 2
+domain: datacentres
+usecases:
+
+  - id: pue
+    title: Power usage effectiveness (PUE)
+    method: [rules]
+    standards: [ISO/IEC 30134-2]
+    why: Total facility energy divided by IT energy.
+    slots:
+      - {key: facility, label: Facility or main incomer energy, required: true, match: {name: [energy, kwh, power], exclude: [power_factor]}}
+      - {key: it, label: IT load (UPS output or PDU), required: true, match: {name: [ups, pdu, it_load, it_power]}}
+    logic:
+      - PUE = facility energy ÷ IT energy per hour, day and month.
+    output: PUE trend with the cooling and loss breakdown where metered.
+    runs: Hourly
+    history: None
+
+  - id: rack-inlet-compliance
+    title: Rack inlet temperature compliance
+    method: [rules]
+    standards: [ASHRAE TC 9.9 recommended envelope]
+    why: Inlet temperature and humidity against the recommended envelope.
+    slots:
+      - {key: inlet, label: Rack or cold-aisle inlet temperature, required: true, match: {name: [inlet, cold_aisle, rack.*temperature, supply_air_temperature]}}
+      - {key: humidity, label: Humidity or dew point, required: false, match: {name: [humidity, dew_point]}}
+    logic:
+      - Flag racks outside the envelope; list hot spots by row.
+    output: Compliance % and hot-spot list.
+    runs: Every 15 min
+    history: None
+
+  - id: cooling-setpoint-raise
+    title: Cooling setpoint raise recommendations
+    method: [rules]
+    standards: [ASHRAE TC 9.9]
+    why: If all inlets are well inside the envelope, supply setpoints can rise in small steps.
+    slots:
+      - {key: sp, label: CRAH/CRAC supply or return setpoint (writable), required: true, writable: true, match: {name: [setpoint]}}
+      - {key: inlet, label: Rack inlet temperatures, required: true, match: {name: [inlet, cold_aisle, return_air_temperature, supply_air_temperature]}}
+    logic:
+      - "Every hour: if the warmest inlet is more than 2 °C below the limit, recommend +0.5 °C; reverse when inlets warm."
+    output: Setpoint recommendations for approval.
+    runs: Hourly
+    history: None
+
+  - id: capacity-planning
+    title: Power and cooling capacity headroom
+    method: [statistics]
+    why: Peak utilisation per room and trend to the limit.
+    slots:
+      - {key: it, label: IT load per room or PDU, required: true, match: {name: [ups, pdu, it_load, power], exclude: [power_factor]}}
+    external: [Design capacity per room]
+    logic:
+      - 95th percentile load per room; linear trend; months until 80% of capacity.
+    output: Headroom and months-to-limit per room.
+    runs: Weekly
+    history: 3 months
+
+  - id: workload-cooling-placement
+    title: Workload placement for power and cooling
+    method: [optimisation]
+    why: Placing new loads across rooms within power, cooling and redundancy limits is a bin-packing problem.
+    solver: scripts/optimise/budget_select.py
+    slots:
+      - {key: it, label: IT load per room or rack, required: true, match: {name: [ups, pdu, it_load, power], exclude: [power_factor]}}
+    external: [Rack and room limits, Redundancy rules, New load requests]
+    logic:
+      - "Solve: place requests to keep every room under its limits and balance headroom."
+    output: Placement recommendation per request.
+    runs: On request
+    history: None

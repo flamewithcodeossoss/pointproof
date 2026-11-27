@@ -1,0 +1,4 @@
+item,daily_demand,daily_demand_std,lead_time_days,order_cost,holding_cost_per_unit_year
+Hand towel packs (Tower L1-L10),42,9,4,180,6
+Soap refills (Tower),18,5,4,180,9
+Toilet rolls (Tower),120,22,3,180,1.5
